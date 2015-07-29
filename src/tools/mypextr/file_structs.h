@@ -13,6 +13,7 @@
 #define MYP_TABLE_BLOCK_HEADER_SIZE 12
 #define MYP_ARCHIVE_HEADER_SIZE 16
 #define MYP_ARCHIVE_HEADER_START_POSITION 0x0C 
+#define MYP_EXPECTED_NUM_FILES_PER_BLOCK 1000
 
 
 /*
@@ -32,7 +33,7 @@ struct FileDescriptor {
     unsigned int uncompressed_size;
     unsigned int primary_hash;
     unsigned int secondary_hash;
-    char compression_method;
+    unsigned char compression_method;
 };
 
 struct ArchiveFileTable {
@@ -43,17 +44,6 @@ struct ArchiveFileTable {
 /*
  * Creator and Destruction functions
  */
-
-FileDescriptor* create_FileDescriptor() {
-    FileDescriptor* file_descriptor = (FileDescriptor*) malloc(sizeof(FileDescriptor));
-    memset(file_descriptor,0, sizeof(FileDescriptor));
-    return file_descriptor;
-}
-
-void delete_FileDescriptor( FileDescriptor* file_descriptor) {
-    free(file_descriptor);
-}
-
 
 ArchiveFileTable* create_ArchiveFileTable() {
     return new ArchiveFileTable();
@@ -68,44 +58,40 @@ void delete_ArchiveFileTable(ArchiveFileTable* file_table) {
  * Function definitions
  */
 
-unsigned int LE_to_uint( const unsigned char* buffer, long offset ) {
-    unsigned int byte1 = (buffer[offset]);
-    unsigned int byte2 = (buffer[offset+1]) << 8;
-    unsigned int byte3 = (buffer[offset+2]) << 16;
-    unsigned int byte4 = (buffer[offset+3]) << 24;
-    unsigned int result = byte4 + byte3 + byte2 + byte1;  
+unsigned int parse_uint( const unsigned char* buffer, long offset ) {
+    unsigned int result;
+    memcpy(&result,buffer+offset,sizeof(unsigned int));
     return result;
 }
 
-unsigned long long LE_to_ulong( const unsigned char* buffer, long offset ) {
-    unsigned long long lower = (unsigned long long)LE_to_uint(buffer,offset);
-    unsigned long long upper = ((unsigned long long)(LE_to_uint(buffer,offset+4)) << 32);
-    return upper + lower;
+unsigned long long parse_ulong( const unsigned char* buffer, long offset ) {
+    unsigned long long result;
+    memcpy(&result,buffer+offset,sizeof(unsigned long long));
+    return result;
 }
 
 
-void initialize_FileDescriptor(FileDescriptor* descriptor, const unsigned char* buffer) {
+void initialize_FileDescriptor(FileDescriptor* descriptor, const unsigned char* buffer, unsigned int offset) {
 
-    descriptor->starting_position = LE_to_ulong(buffer, 0);            
-    descriptor->header_size =  LE_to_uint(buffer,8);
-    descriptor->compressed_size = LE_to_uint(buffer, 12);
-    descriptor->uncompressed_size =  LE_to_uint(buffer, 16);
-    descriptor->secondary_hash = LE_to_uint(buffer, 20);
-    descriptor->primary_hash = LE_to_uint(buffer, 24);
-    descriptor->compression_method = buffer[32];
+    descriptor->starting_position = parse_ulong(buffer, offset + 0);            
+    descriptor->header_size =  parse_uint(buffer, offset + 8);
+    descriptor->compressed_size = parse_uint(buffer, offset + 12);
+    descriptor->uncompressed_size =  parse_uint(buffer, offset + 16);
+    descriptor->secondary_hash = parse_uint(buffer, offset + 20);
+    descriptor->primary_hash = parse_uint(buffer, offset + 24);
+    descriptor->compression_method = buffer[offset + 32];
 
 }
 
 void initialize_TableBlockHeader( TableBlockHeader* block_header, const unsigned char* buffer ) {
-    block_header->num_files  = LE_to_uint(buffer,0);
-    block_header->next_block = LE_to_ulong(buffer,4);
+    block_header->num_files  = parse_uint(buffer,0);
+    block_header->next_block = parse_ulong(buffer,4);
 }
 
 ArchiveFileTable* load_archive( const char* file_name) {
     ArchiveFileTable* archive_file_table = create_ArchiveFileTable();
     FILE* fp = fopen(file_name, "rb");
 
-    unsigned char file_descriptor_buffer[MYP_FILE_DESCRIPTOR_SIZE];
     unsigned char archive_header_buffer[MYP_ARCHIVE_HEADER_SIZE];
     unsigned char table_block_header_buffer[MYP_TABLE_BLOCK_HEADER_SIZE];
 
@@ -123,7 +109,7 @@ ArchiveFileTable* load_archive( const char* file_name) {
         fprintf(stderr, "Unexpectedly reached end of file at looking for the archive header\n");
         return NULL;
     }
-    unsigned long long next_table_block_header = LE_to_ulong(archive_header_buffer,0);
+    unsigned long long next_table_block_header = parse_ulong(archive_header_buffer,0);
 
     /* 
      * Get total number of files in the archive  
@@ -139,9 +125,14 @@ ArchiveFileTable* load_archive( const char* file_name) {
         fprintf(stderr, "Unexpectedly reached end of file when looking for the total number of files in the archive\n");
         return NULL;
     }
-    unsigned int num_total_files = LE_to_uint(buffer,0);
+    unsigned int num_total_files = parse_uint(buffer,0);
     printf("Number of files in the archive %d\n",num_total_files);
 
+    /* Create buffers to store file descriptors. Initial size to 1000 as it is typically observed in practice.  */
+    unsigned int myp_file_descriptor_buffer_size = MYP_EXPECTED_NUM_FILES_PER_BLOCK * MYP_FILE_DESCRIPTOR_SIZE;
+    unsigned char* myp_file_descriptor_buffer = (unsigned char*)malloc(sizeof(unsigned char)*myp_file_descriptor_buffer_size);
+    unsigned int file_descriptor_buffer_size = MYP_EXPECTED_NUM_FILES_PER_BLOCK;
+    FileDescriptor* file_descriptor_buffer = (FileDescriptor*)malloc(sizeof(FileDescriptor)*file_descriptor_buffer_size);
     unsigned int num_parsed_files = 0;
     while( next_table_block_header != 0 ) {
 
@@ -150,6 +141,7 @@ ArchiveFileTable* load_archive( const char* file_name) {
             fprintf(stderr, "Error placing the cursor to the header block position\n");
             return NULL;
         }
+
         int bytes_read = fread(table_block_header_buffer, MYP_TABLE_BLOCK_HEADER_SIZE, 1, fp);
         if( feof(fp) && bytes_read != MYP_TABLE_BLOCK_HEADER_SIZE ) {
             fprintf(stderr, "Unexpectedly reached end of file when reading table block header\n");
@@ -159,15 +151,43 @@ ArchiveFileTable* load_archive( const char* file_name) {
         TableBlockHeader table_block_header;
         initialize_TableBlockHeader(&table_block_header, table_block_header_buffer);
 
-
         /*Read file descriptors*/
+        if( table_block_header.num_files*MYP_FILE_DESCRIPTOR_SIZE > myp_file_descriptor_buffer_size ) { // resizing buffer if needed
+            free(myp_file_descriptor_buffer);
+            myp_file_descriptor_buffer_size = table_block_header.num_files*MYP_FILE_DESCRIPTOR_SIZE;
+            myp_file_descriptor_buffer = (unsigned char*)malloc(myp_file_descriptor_buffer_size);
+        }
+
+        if( table_block_header.num_files > file_descriptor_buffer_size ) { // resizing buffer if needed
+            free(file_descriptor_buffer);
+            file_descriptor_buffer_size = table_block_header.num_files ;
+            file_descriptor_buffer = (FileDescriptor*)malloc(sizeof(FileDescriptor)*file_descriptor_buffer_size);
+        }
+
+        if( fread(myp_file_descriptor_buffer, MYP_FILE_DESCRIPTOR_SIZE, table_block_header.num_files, fp) != table_block_header.num_files ) {
+            fprintf(stderr, "Unexpectedly reached end of file when reading file headers\n");
+            return NULL;
+        }
+
+        for ( int i = 0; i < table_block_header.num_files; ++i) {
+            initialize_FileDescriptor(&file_descriptor_buffer[i],myp_file_descriptor_buffer, i*MYP_FILE_DESCRIPTOR_SIZE);
+            if( file_descriptor_buffer[i].compression_method == 0 )
+                printf("uncompressed size: %d, compressed_size: %d\n", file_descriptor_buffer[i].uncompressed_size, file_descriptor_buffer[i].compressed_size);
+            num_parsed_files += file_descriptor_buffer[i].starting_position > 0 ? 1 : 0;
+        }
+
+        /*Read files*/
+        for ( int i = 0; i < table_block_header.num_files; ++i) {
+
+        }
 
         next_table_block_header = table_block_header.next_block;
-        num_parsed_files += table_block_header.num_files;
         printf("Number of files read so far: %d\n", num_parsed_files);
     }
+    free(myp_file_descriptor_buffer);
+    free(file_descriptor_buffer);
 
-    printf("Number of files read  %d\n", num_total_files);
+    printf("Number of files read  %d\n", num_parsed_files);
     fclose(fp);
     return archive_file_table;
 }
