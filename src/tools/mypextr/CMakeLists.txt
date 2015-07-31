@@ -14,8 +14,12 @@ set(CMAKE_CPP_FLAGS_RELEASE "${CMAKE_CPP_FLAGS_RELEASE} -O2 -DNDEBUG ")
 
 
 INCLUDE_DIRECTORIES(./src)
-SET(SOURCE_FILES main.cpp)
-ADD_EXECUTABLE(mypexptr ${SOURCE_FILES})  
+SET(SOURCE_FILES  main.cpp 
+                  MYPFile.cpp 
+  )
+
+ADD_EXECUTABLE(mypexptr ${SOURCE_FILES} )  
+TARGET_LINK_LIBRARIES(mypexptr z)
 
 set_target_properties( mypexptr 
     PROPERTIES
