@@ -23,8 +23,7 @@
 #define LINE_BUFFER_BLOCK_SIZE 8
 
 #define MYP_NUM_PREFIXES 3
-static const char* stx_prefixes[MYP_NUM_PREFIXES] = {"sk.0.0.", "it.0.0.", "fi.0.0." };
-
+static const char* name_prefixes[MYP_NUM_PREFIXES] = {"sk.0.0.", "it.0.0.", "fi.0.0." };
 
 
 /*
@@ -386,15 +385,18 @@ int MYPFile::extract( const char* path ) {
         file_name= (char*)malloc(sizeof(char)*(str_length+1));
         strcpy((char*)file_name, str);
 
-        const char* last_dot_pos = strrchr(file_name, '.');
-        if( last_dot_pos && (strcmp((char*)(last_dot_pos+1), "stx") == 0)) {
-          const char* last_slash_pos = strrchr((char*)file_name, '/');
-
+        if( str_length > 0 ) {
+          const char* actual_file_name_start = strrchr((char*)file_name, '/');
+          if( actual_file_name_start != NULL ) {
+            actual_file_name_start++;
+          } else {
+            actual_file_name_start = file_name;
+          }
           int pre_length = 0;
           int pre = 0;
           for (int j = 0; j < MYP_NUM_PREFIXES; ++j ) {
-            int length = strlen(stx_prefixes[j]);
-            if( strncmp(last_slash_pos+1, stx_prefixes[j], length) == 0 ) {
+            int length = strlen(name_prefixes[j]);
+            if( strncmp(actual_file_name_start, name_prefixes[j], length) == 0 ) {
               pre_length = length;
               pre = j;
               break;
@@ -402,10 +404,15 @@ int MYPFile::extract( const char* path ) {
           }
 
           if ( pre < MYP_NUM_PREFIXES ) {
-            strcpy((char*)(last_slash_pos+1),(char*)(str+(last_slash_pos + 1 - file_name) + pre_length));
-            file_name[str_length- 3 - pre_length] = 'd';
-            file_name[str_length- 3 - pre_length + 1] = 'd';
-            file_name[str_length- 3 - pre_length + 2] = 's';
+            strcpy((char*)(actual_file_name_start),(char*)(str+(actual_file_name_start - file_name) + pre_length));
+
+            const char* last_dot_pos = strrchr(file_name, '.');
+            if( last_dot_pos && (strcmp((char*)(last_dot_pos+1), "stx") == 0)) {
+              file_name[str_length- 3 - pre_length] = 'd';
+              file_name[str_length- 3 - pre_length + 1] = 'd';
+              file_name[str_length- 3 - pre_length + 2] = 's';
+            }
+
           }
         }
 
