@@ -25,20 +25,20 @@ class MYPFile {
     MYPFile();
     ~MYPFile();
 
-    int Load( const char* file_name );
+    int load( const char* file_name );
 
-    int LoadHashDictionary( const char* file_name );
+    int load_hash_dictionary( const char* file_name );
 
-    int Extract( const char* path );
+    int extract( const char* path );
 
-    MYPFileStats GetStats() const;
+    MYPFileStats get_stats() const;
 
   private:
 
     MYPFile(const MYPFile& file);
     MYPFile& operator=(const MYPFile& file);
 
-    void add_hash_to_file_name_entry( const char* line );
+    void add_hash_to_filename_entry( const char* line );
 
 
   private:

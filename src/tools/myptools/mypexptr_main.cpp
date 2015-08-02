@@ -27,17 +27,17 @@ int main(int argc, const char** argv) {
     if( archive_file_name ) {
         printf("Extracting files of archive %s\n", archive_file_name);
         MYPFile myp_file;
-        if(myp_file.Load(archive_file_name)) {
+        if(myp_file.load(archive_file_name)) {
           printf("Error when loading file\n");
         }
 
         if( hash_file_name ) {
-          if( myp_file.LoadHashDictionary(hash_file_name) ) {
+          if( myp_file.load_hash_dictionary(hash_file_name) ) {
             printf("Error when reading hashes file\n");
           }
         }
 
-        if( myp_file.Extract("./extracted_data") ) {
+        if( myp_file.extract("./extracted_data") ) {
           printf("Error while extracting archive\n");
         }
     }

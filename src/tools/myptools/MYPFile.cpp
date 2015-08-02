@@ -5,7 +5,7 @@
 #include <stdlib.h>
 #include <stdio.h>
 #include "MYPFile.h"
-#include "file_helpers.h"
+#include "hash.h"
 
 #include <zlib.h>
 
@@ -21,6 +21,9 @@
 #define MYP_EXPECTED_NUM_FILES_PER_BLOCK 1000
 
 #define LINE_BUFFER_BLOCK_SIZE 8
+
+#define MYP_NUM_PREFIXES 3
+static const char* stx_prefixes[MYP_NUM_PREFIXES] = {"sk.0.0.", "it.0.0.", "fi.0.0." };
 
 
 
@@ -102,7 +105,7 @@ MYPFile::~MYPFile() {
   }
 }
 
-int MYPFile::Load( const char* file_name) {
+int MYPFile::load( const char* file_name) {
 
     FILE* fp = fopen(file_name, "rb");
 
@@ -182,7 +185,7 @@ int MYPFile::Load( const char* file_name) {
 }
 
 
-int MYPFile::LoadHashDictionary( const char* file_name ) {
+int MYPFile::load_hash_dictionary( const char* file_name ) {
 
   FILE* fp = fopen(file_name, "r");
 
@@ -199,14 +202,14 @@ int MYPFile::LoadHashDictionary( const char* file_name ) {
       fgets(&line_buffer[line_buffer_size - LINE_BUFFER_BLOCK_SIZE - 1], LINE_BUFFER_BLOCK_SIZE + 1, fp);  
       line_size = strlen(line_buffer);
     }
-    add_hash_to_file_name_entry(line_buffer);
+    add_hash_to_filename_entry(line_buffer);
   }
   free(line_buffer);
   fclose(fp);
   return 0;
 }
 
-void MYPFile::add_hash_to_file_name_entry( const char* line ) {
+void MYPFile::add_hash_to_filename_entry( const char* line ) {
   char* next_sharp; 
   long int ph = strtol(line,&next_sharp,16);
   long int sh = strtol(next_sharp+1,&next_sharp,16);
@@ -340,7 +343,7 @@ static void find_extension(const unsigned char* data, char* ext) {
   
 }
 
-int MYPFile::Extract( const char* path ) {
+int MYPFile::extract( const char* path ) {
   
   if( archive_name_ ) {
     FILE* fp = fopen(archive_name_,"rb");
@@ -374,12 +377,38 @@ int MYPFile::Extract( const char* path ) {
         fread(data, sizeof(unsigned char), file_descriptor->uncompressed_size, fp);
       }
 
-
-
-      const char* file_name = NULL;
+      char* file_name = NULL;
       std::map<unsigned long long, std::string>::iterator it = hash_to_file_names_.find( file_descriptor->hash );
       if( it != hash_to_file_names_.end() ) {
-        file_name = it->second.c_str();
+        
+        const char* str  = it->second.c_str();
+        int str_length = strlen(str);
+        file_name= (char*)malloc(sizeof(char)*(str_length+1));
+        strcpy((char*)file_name, str);
+
+        const char* last_dot_pos = strrchr(file_name, '.');
+        if( last_dot_pos && (strcmp((char*)(last_dot_pos+1), "stx") == 0)) {
+          const char* last_slash_pos = strrchr((char*)file_name, '/');
+
+          int pre_length = 0;
+          int pre = 0;
+          for (int j = 0; j < MYP_NUM_PREFIXES; ++j ) {
+            int length = strlen(stx_prefixes[j]);
+            if( strncmp(last_slash_pos+1, stx_prefixes[j], length) == 0 ) {
+              pre_length = length;
+              pre = j;
+              break;
+            }
+          }
+
+          if ( pre < MYP_NUM_PREFIXES ) {
+            strcpy((char*)(last_slash_pos+1),(char*)(str+(last_slash_pos + 1 - file_name) + pre_length));
+            file_name[str_length- 3 - pre_length] = 'd';
+            file_name[str_length- 3 - pre_length + 1] = 'd';
+            file_name[str_length- 3 - pre_length + 2] = 's';
+          }
+        }
+
       }
 
       
@@ -388,7 +417,7 @@ int MYPFile::Extract( const char* path ) {
         char ext[16];
         find_extension(data,ext);
 
-        file_name = (const char*)malloc(sizeof(char)*(8+16+1)); // hash_name + ext (16) + null_char     
+        file_name = (char*)malloc(sizeof(char)*(8+16+1)); // hash_name + ext (16) + null_char     
         sprintf((char*)file_name,"%llX.%s", file_descriptor->hash, ext);
 
       }
@@ -403,7 +432,6 @@ int MYPFile::Extract( const char* path ) {
       int final_file_name_length = path_size+file_name_size;
       char* final_file_name = (char*)malloc(sizeof(char*)*final_file_name_length+1);
       sprintf(final_file_name, "%s/%s", path, file_name);
-      printf("Extracting %s ... \n", final_file_name);
 
       /* Creating folders from path */
       char* sub_path = (char*)malloc(sizeof(char)*final_file_name_length+1);
@@ -421,16 +449,14 @@ int MYPFile::Extract( const char* path ) {
       if( wfp ) {
         fwrite(data, file_descriptor->uncompressed_size, 1, wfp);
         fclose(wfp);
-        printf("               ... file extracted \n");
       } else {
         fprintf(stderr, "ERROR creating file %s\n", final_file_name );
       }
 
-      if( it == hash_to_file_names_.end() ) {
-        free((char*)file_name);
-      }
-
+      free((char*)file_name);
       free(data);
+      if( (i+1) % 1000  == 0 ) 
+        printf("Extracted %d out of %d files\n",i+1, num_files);
     }
     fclose(fp);
   }
@@ -438,7 +464,7 @@ int MYPFile::Extract( const char* path ) {
   return 0;
 }
 
-MYPFileStats MYPFile::GetStats() const {
+MYPFileStats MYPFile::get_stats() const {
 
   MYPFileStats stats;
   stats.num_files_ = file_descriptors_.size();
