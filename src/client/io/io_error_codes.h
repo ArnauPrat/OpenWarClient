@@ -1,0 +1,9 @@
+
+
+#ifndef OWC_IO_ERROR_CODES_H
+#define OWC_IO_ERROR_CODES_h
+
+#define OWC_IO_ERROR_FILE_NOT_FOUND   0x01
+#define OWC_IO_ERROR_WRONG_FORMAT     0x02
+
+#endif
