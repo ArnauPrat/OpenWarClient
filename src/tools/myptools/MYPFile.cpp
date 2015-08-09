@@ -22,8 +22,8 @@
 
 #define LINE_BUFFER_BLOCK_SIZE 8
 
-#define MYP_NUM_PREFIXES 3
-static const char* name_prefixes[MYP_NUM_PREFIXES] = {"sk.0.0.", "it.0.0.", "fi.0.0." };
+#define MYP_NUM_PREFIXES 4
+static const char* name_prefixes[MYP_NUM_PREFIXES] = {"sk.0.0.", "it.0.0.", "fi.0.0.", "fg.0.0." };
 
 
 /*
@@ -347,12 +347,14 @@ int MYPFile::extract( const char* path ) {
   if( archive_name_ ) {
     FILE* fp = fopen(archive_name_,"rb");
     int num_files = file_descriptors_.size();
+    int file_name_buffer_size = sizeof(char)*1024;;
+    char* file_name = (char*)malloc(file_name_buffer_size);;
     for ( int i = 0; i < num_files; ++i ) {
 
       FileDescriptor* file_descriptor = &file_descriptors_[i];
-
       unsigned char* data = (unsigned char*)malloc(sizeof(unsigned char)*file_descriptor->uncompressed_size);;
-      if( file_descriptor->compression_method != 0 ) {
+
+      if( file_descriptor->compression_method != 0 ) { /* It is compressed */
         unsigned char* compressed_buffer = (unsigned char*)malloc(sizeof(unsigned char)*file_descriptor->compressed_size);
         fseek(fp,file_descriptor->starting_position + file_descriptor->header_size, SEEK_SET);
         fread(compressed_buffer, sizeof(unsigned char), file_descriptor->compressed_size, fp);
@@ -376,13 +378,16 @@ int MYPFile::extract( const char* path ) {
         fread(data, sizeof(unsigned char), file_descriptor->uncompressed_size, fp);
       }
 
-      char* file_name = NULL;
       std::map<unsigned long long, std::string>::iterator it = hash_to_file_names_.find( file_descriptor->hash );
-      if( it != hash_to_file_names_.end() ) {
+      if( it != hash_to_file_names_.end() ) { /* We have a name for this particular hash */
         
         const char* str  = it->second.c_str();
         int str_length = strlen(str);
-        file_name= (char*)malloc(sizeof(char)*(str_length+1));
+
+        if( str_length >= 1024 ) { /* we need a larger file name buffer */
+          file_name_buffer_size *= 1024;
+          file_name = (char*)realloc(file_name,file_name_buffer_size); 
+        }
         strcpy((char*)file_name, str);
 
         if( str_length > 0 ) {
@@ -392,6 +397,8 @@ int MYPFile::extract( const char* path ) {
           } else {
             actual_file_name_start = file_name;
           }
+
+          /* Check for file name prefixes for renaming the file. We do not want them */
           int pre_length = 0;
           int pre = 0;
           for (int j = 0; j < MYP_NUM_PREFIXES; ++j ) {
@@ -405,26 +412,22 @@ int MYPFile::extract( const char* path ) {
 
           if ( pre < MYP_NUM_PREFIXES ) {
             strcpy((char*)(actual_file_name_start),(char*)(str+(actual_file_name_start - file_name) + pre_length));
-
             const char* last_dot_pos = strrchr(file_name, '.');
             if( last_dot_pos && (strcmp((char*)(last_dot_pos+1), "stx") == 0)) {
               file_name[str_length- 3 - pre_length] = 'd';
               file_name[str_length- 3 - pre_length + 1] = 'd';
               file_name[str_length- 3 - pre_length + 2] = 's';
             }
-
           }
         }
 
       }
 
       
-      if( !file_name || strlen(file_name) == 0 ) {
+      if( !file_name || strlen(file_name) == 0 ) { /* We do not have a name for this hash. We infer the extension*/
 
         char ext[16];
         find_extension(data,ext);
-
-        file_name = (char*)malloc(sizeof(char)*(8+16+1)); // hash_name + ext (16) + null_char     
         sprintf((char*)file_name,"%llX.%s", file_descriptor->hash, ext);
 
       }
@@ -460,13 +463,14 @@ int MYPFile::extract( const char* path ) {
         fprintf(stderr, "ERROR creating file %s\n", final_file_name );
       }
 
-      free((char*)file_name);
       free(data);
       if( (i+1) % 1000  == 0 ) 
         printf("Extracted %d out of %d files\n",i+1, num_files);
     }
     fclose(fp);
+    free((char*)file_name);
   }
+
 
   return 0;
 }

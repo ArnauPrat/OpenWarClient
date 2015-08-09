@@ -11,4 +11,8 @@
       private:\
         className();
 
+#define OWC_BASECLASS_NON_INSTANTIABLE(className)\
+      protected:\
+        className();
+
 #endif

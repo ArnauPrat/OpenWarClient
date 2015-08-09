@@ -18,6 +18,7 @@ class Properties {
     int load(const char* file_name);
 
     std::string get(const char* property_name) const; 
+    void set(const char* property_name, const char* value); 
 
     void print( FILE* fp );
 

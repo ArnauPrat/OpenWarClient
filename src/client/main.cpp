@@ -77,8 +77,10 @@ int main( int argc, char** argv){
 
   properties.print(stdin);
 
-  OWClient* client = OWClient::instance();
-  client->login( user_name, passwd, properties.get("server_ip").c_str(), atoi(properties.get("server_port").c_str()));
-  OWClient::destroy_instance();
+  properties.set("user_name", user_name);
+  properties.set("passwd", passwd);
+  owc::OWClient::init();
+  owc::OWClient::run(&properties);
+  owc::OWClient::free();
   return 0;
 }

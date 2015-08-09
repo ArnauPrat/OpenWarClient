@@ -8,24 +8,27 @@ if(NOT CMAKE_BUILD_TYPE AND NOT CMAKE_CONFIGURATION_TYPES)
   set(CMAKE_BUILD_TYPE Release)
 endif()
 
-set(CMAKE_CPP_FLAGS ${CMAKE_CPP_FLAGS} "-Wall")
-set(CMAKE_CPP_FLAGS_DEBUG "${CMAKE_CPP_FLAGS_DEBUG} -O0 -g -pg")
-set(CMAKE_CPP_FLAGS_RELEASE "${CMAKE_CPP_FLAGS_RELEASE} -O2 -DNDEBUG ")
+set(CMAKE_CXX_FLAGS ${CMAKE_CPP_FLAGS} "-std=c++11 -Wall")
+set(CMAKE_CXX_FLAGS_DEBUG "${CMAKE_CPP_FLAGS_DEBUG}  -O0 -g -pg")
+set(CMAKE_CXX_FLAGS_RELEASE "${CMAKE_CPP_FLAGS_RELEASE} -O2 -DNDEBUG ")
 
 
 INCLUDE_DIRECTORIES(./)
 INCLUDE_DIRECTORIES(${OPENWARCLIENT_LIB_INCLUDE_DIRS})
-SET( OPENWARCLIENT_SOURCE_FILES main.cpp
-                                OWClient.cpp
+SET( OPENWARCLIENT_SOURCE_FILES ./main.cpp
+                                ./OWClient.cpp
+                                ./login_sequence.cpp
                                 ./common/marshalling.cpp
                                 ./io/Properties.cpp
+                                ./io/Log.cpp
+                                ./network/NetworkSocket.cpp
 
   
   )
 
 
 ADD_EXECUTABLE(openwarclient ${OPENWARCLIENT_SOURCE_FILES})  
-TARGET_LINK_LIBRARIES(openwarclient ssl crypto)
+TARGET_LINK_LIBRARIES(openwarclient ssl crypto pthread)
 
 
 SET( OPENWARCLIENT_OUTPUT_DIR "${CMAKE_BINARY_DIR}/bin/client/")

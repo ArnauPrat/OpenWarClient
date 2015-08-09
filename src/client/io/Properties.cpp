@@ -45,6 +45,10 @@ std::string Properties::get(const char* property_name) const {
   return std::string();
 }
 
+void Properties::set(const char* property_name, const char* value) {
+  properties_.insert(std::pair<std::string, std::string>(property_name, value));
+}
+
 void Properties::print( FILE* fp ) {
   for ( std::map<std::string, std::string>::iterator it = properties_.begin(); 
         it != properties_.end(); 

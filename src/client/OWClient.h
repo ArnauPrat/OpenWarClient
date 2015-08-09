@@ -4,34 +4,36 @@
 #define OWCLIENT_H
 
 #include "common/macros.h"
+#include "io/Properties.h"
 #include <string>
-#include "asio.hpp"
 
-class OWClient {
-  OWC_NON_INSTANTIABLE(OWClient);
-  OWC_NON_COPYABLE(OWClient);
+namespace owc {
 
-  public:
+  class OWClient {
+    OWC_NON_INSTANTIABLE(OWClient);
+    OWC_NON_COPYABLE(OWClient);
 
-    static OWClient* instance(); 
-    static void destroy_instance();
+    public:
+    enum Status {
+      E_DISCONNECTED,
+      E_LOGGED_IN,
+    };
+
+    public:
+
+    static void init();
+    static void free();
+    static void run( const Properties* properties);
+
+    private:
 
 
-    void login( const char* user_name, const char* passwd, const char* server_ip, unsigned int port );
+    static std::string   user_name_;
+    static std::string   token_;
 
+    static Status  client_status_;
 
-
-  private:
-
-    static OWClient* instance_;
-
-    std::string   user_name_;
-    std::string   token_;
-
-    asio::io_service          io_service_;
-    asio::ip::tcp::socket     login_socket_;
-    asio::ip::tcp::endpoint   login_endpoint_; 
-
-};
+  };
+}
 
 #endif
