@@ -2,7 +2,7 @@
 
 #include <stdio.h>
 #include <string.h>
-#include "MYPFile.h" 
+#include <data/MYPFileDatabase.h> 
 
 #define CHECK_ARGUMENT_STRING(index, option, variable) \
 	if( strcmp(argv[index],option) == 0 ){ \
@@ -26,8 +26,8 @@ int main(int argc, const char** argv) {
 
     if( archive_file_name ) {
         printf("Extracting files of archive %s\n", archive_file_name);
-        MYPFile myp_file;
-        if(myp_file.load(archive_file_name)) {
+        owc::MYPFileDatabase myp_file;
+        if(myp_file.load_archive(archive_file_name)) {
           printf("Error when loading file\n");
         }
 

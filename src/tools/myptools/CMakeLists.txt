@@ -13,16 +13,15 @@ set(CMAKE_CPP_FLAGS_DEBUG "${CMAKE_CPP_FLAGS_DEBUG} -O0 -g -pg")
 set(CMAKE_CPP_FLAGS_RELEASE "${CMAKE_CPP_FLAGS_RELEASE} -O2 -DNDEBUG ")
 
 
-INCLUDE_DIRECTORIES(./src)
+INCLUDE_DIRECTORIES(../../client)
 SET( MYPEXPTR_SOURCE_FILES  mypexptr_main.cpp 
-                  MYPFile.cpp 
+                            ../../client/data/MYPFileDatabase.cpp 
   )
 
 SET( MYPHASH_SOURCE_FILES myphash_main.cpp 
   )
 
 SET( MYPNAME_SOURCE_FILES mypname_main.cpp 
-                  names.cpp
   )
 
 ADD_EXECUTABLE(myphash ${MYPHASH_SOURCE_FILES} )  

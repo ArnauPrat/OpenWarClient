@@ -22,13 +22,12 @@ SET( OPENWARCLIENT_SOURCE_FILES ./main.cpp
                                 ./io/Properties.cpp
                                 ./io/Log.cpp
                                 ./network/NetworkSocket.cpp
-
-  
+                                ./data/MYPFileDatabase.cpp
   )
 
 
 ADD_EXECUTABLE(openwarclient ${OPENWARCLIENT_SOURCE_FILES})  
-TARGET_LINK_LIBRARIES(openwarclient ssl crypto pthread)
+TARGET_LINK_LIBRARIES(openwarclient ssl crypto pthread z)
 
 
 SET( OPENWARCLIENT_OUTPUT_DIR "${CMAKE_BINARY_DIR}/bin/client/")

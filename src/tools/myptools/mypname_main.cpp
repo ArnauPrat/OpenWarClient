@@ -4,7 +4,7 @@
 #include <string.h>
 #include <string>
 #include <set>
-#include "MYPFile.h" 
+#include <data/MYPFileDatabase.h> 
 
 #define CHECK_ARGUMENT_STRING(index, option, variable) \
 	if( strcmp(argv[index],option) == 0 ){ \
