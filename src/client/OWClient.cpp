@@ -1,9 +1,10 @@
 
 
 #include "OWClient.h"
-#include "login_sequence.h"
 #include "io/Log.h"
+#include "login_sequence.h"
 #include "network/NetworkSocket.h"
+#include <irrlicht.h>
 #include <string.h>
 #include <thread>
 

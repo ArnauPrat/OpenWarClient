@@ -14,20 +14,23 @@ set(CMAKE_CXX_FLAGS_RELEASE "${CMAKE_CPP_FLAGS_RELEASE} -O2 -DNDEBUG ")
 
 
 INCLUDE_DIRECTORIES(./)
+INCLUDE_DIRECTORIES(${IRR_INCLUDE_DIR})
 INCLUDE_DIRECTORIES(${OPENWARCLIENT_LIB_INCLUDE_DIRS})
+
 SET( OPENWARCLIENT_SOURCE_FILES ./main.cpp
                                 ./OWClient.cpp
                                 ./login_sequence.cpp
                                 ./common/marshalling.cpp
                                 ./io/Properties.cpp
                                 ./io/Log.cpp
+                                ./io/MYPFileDatabase.cpp
                                 ./network/NetworkSocket.cpp
-                                ./data/MYPFileDatabase.cpp
   )
 
 
 ADD_EXECUTABLE(openwarclient ${OPENWARCLIENT_SOURCE_FILES})  
-TARGET_LINK_LIBRARIES(openwarclient ssl crypto pthread z)
+ADD_DEPENDENCIES(openwarclient irrlicht)
+TARGET_LINK_LIBRARIES(openwarclient irrlicht ssl crypto pthread z)
 
 
 SET( OPENWARCLIENT_OUTPUT_DIR "${CMAKE_BINARY_DIR}/bin/client/")
