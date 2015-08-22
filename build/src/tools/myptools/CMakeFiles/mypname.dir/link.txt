@@ -1,1 +1,0 @@
-/usr/bin/c++   -O3 -DNDEBUG   CMakeFiles/mypname.dir/mypname_main.cpp.o  -o ../../../bin/tools/myptools/mypname -rdynamic 
