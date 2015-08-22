@@ -1,0 +1,18 @@
+#IncludeRegexLine: ^[ 	]*#[ 	]*(include|import)[ 	]*[<"]([^">]+)([">])
+
+#IncludeRegexScan: ^.*$
+
+#IncludeRegexComplain: ^$
+
+#IncludeRegexTransform: 
+
+../src/tools/myptools/../../client/io/hash.h
+string.h
+-
+
+/home/aprat/projects/personal/OpenWarClient/src/tools/myptools/myphash_main.cpp
+io/hash.h
+-
+stdio.h
+/home/aprat/projects/personal/OpenWarClient/src/tools/myptools/stdio.h
+

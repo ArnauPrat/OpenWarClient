@@ -1,0 +1,1 @@
+/usr/bin/c++   -O3 -DNDEBUG   CMakeFiles/mypexptr.dir/mypexptr_main.cpp.o CMakeFiles/mypexptr.dir/__/__/client/io/MYPFileDatabase.cpp.o  -o ../../../bin/tools/myptools/mypexptr -rdynamic -lz 
