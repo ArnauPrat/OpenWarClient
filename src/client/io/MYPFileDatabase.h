@@ -48,7 +48,6 @@ namespace owc {
 
       void add_hash_to_filename_entry( const char* line );
 
-
     private:
       std::vector<char*>                          archive_names_; 
       std::vector<FILE*>                          archive_files_;                                       

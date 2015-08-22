@@ -15,7 +15,7 @@ set(CMAKE_CPP_FLAGS_RELEASE "${CMAKE_CPP_FLAGS_RELEASE} -O2 -DNDEBUG ")
 
 INCLUDE_DIRECTORIES(../../client)
 SET( MYPEXPTR_SOURCE_FILES  mypexptr_main.cpp 
-                            ../../client/data/MYPFileDatabase.cpp 
+                            ../../client/io/MYPFileDatabase.cpp 
   )
 
 SET( MYPHASH_SOURCE_FILES myphash_main.cpp 

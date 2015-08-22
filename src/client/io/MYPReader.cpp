@@ -135,6 +135,7 @@ IReadFile* MYPReader::createAndOpenFile(u32 index)
 		return 0;
 
 	const SFileListEntry &entry = Files[index];
+    // Get additional information regarding MYP files.
 	return createLimitReadFile( entry.FullName, File, entry.Offset, entry.Size );
 }
 

@@ -1,6 +1,6 @@
 
 
-#include <data/hash.h>
+#include <io/hash.h>
 #include "stdio.h"
 
 int main(int argc, char** argv) {

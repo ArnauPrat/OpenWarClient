@@ -2,7 +2,7 @@
 
 #include <stdio.h>
 #include <string.h>
-#include <data/MYPFileDatabase.h> 
+#include <io/MYPFileDatabase.h> 
 
 #define CHECK_ARGUMENT_STRING(index, option, variable) \
 	if( strcmp(argv[index],option) == 0 ){ \
