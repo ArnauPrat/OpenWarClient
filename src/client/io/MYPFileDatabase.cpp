@@ -118,6 +118,7 @@ static const char* name_prefixes[MYP_NUM_PREFIXES] = {"sk.0.0.", "it.0.0.", "fi.
 
     unsigned char buffer[4];
     unsigned int num_total_files;
+    unsigned int num_read_files;
     unsigned long next_table_block_header;
 
 
@@ -135,7 +136,7 @@ static const char* name_prefixes[MYP_NUM_PREFIXES] = {"sk.0.0.", "it.0.0.", "fi.
     FileDescriptor aux_file_descriptor;
 
     int error_code = 0;
-    FILE* fp = fopen(file_name, "rb");
+    FILE* fp = fopen(archive_file_name, "rb");
     archive_files_.push_back(fp);
 
     /* Obtain the position of the first table block */ 
@@ -165,6 +166,7 @@ static const char* name_prefixes[MYP_NUM_PREFIXES] = {"sk.0.0.", "it.0.0.", "fi.
     }
 
     num_total_files = parse_uint(buffer,0);
+    num_read_files = 0;
 
     while( next_table_block_header != 0 ) {
 
@@ -201,18 +203,19 @@ static const char* name_prefixes[MYP_NUM_PREFIXES] = {"sk.0.0.", "it.0.0.", "fi.
         if( aux_file_descriptor.starting_position > 0 ) {
           aux_file_descriptor.archive_index = archive_index;
           file_descriptors_.push_back(aux_file_descriptor); 
+          num_read_files++;
         }
       }
 
       next_table_block_header = table_block_header.next_block;
 
     }
-    free(myp_file_descriptor_buffer);
 
-    if ( num_total_files != file_descriptors_.size() ){
+    if ( num_total_files != num_read_files ){
       error_code = MYP_ERROR_NFILES_MISSMATCH;
       goto error;
     }
+    free(myp_file_descriptor_buffer);
     return 0;
 error:
     /* We undo the adding of the whole archive */
@@ -387,123 +390,164 @@ error:
 
     if(archive_names_.size() > 0 ) {
       int num_files = file_descriptors_.size();
-      int file_name_buffer_size = sizeof(char)*1024;;
-      char* file_name = (char*)malloc(file_name_buffer_size);;
       for ( int i = 0; i < num_files; ++i ) {
 
         FileDescriptor* file_descriptor = &file_descriptors_[i];
+        int res = extract(file_descriptor, path);
+        if(res) return res;
 
-        unsigned char* data;
-        get_file_data(file_descriptor,&data);
-
-        std::map<unsigned long long, std::string>::iterator it = hash_to_file_names_.find( file_descriptor->hash );
-        if( it != hash_to_file_names_.end() ) { /* We have a name for this particular hash */
-
-          const char* str  = it->second.c_str();
-          int str_length = strlen(str);
-
-          if( str_length >= 1024 ) { /* we need a larger file name buffer */
-            file_name_buffer_size *= 1024;
-            file_name = (char*)realloc(file_name,file_name_buffer_size); 
-          }
-          strcpy((char*)file_name, str);
-
-          if( str_length > 0 ) {
-            const char* actual_file_name_start = strrchr((char*)file_name, '/');
-            if( actual_file_name_start != NULL ) {
-              actual_file_name_start++;
-            } else {
-              actual_file_name_start = file_name;
-            }
-
-            /* Check for file name prefixes for renaming the file. We do not want them */
-            int pre_length = 0;
-            int pre = 0;
-            for (int j = 0; j < MYP_NUM_PREFIXES; ++j ) {
-              int length = strlen(name_prefixes[j]);
-              if( strncmp(actual_file_name_start, name_prefixes[j], length) == 0 ) {
-                pre_length = length;
-                pre = j;
-                break;
-              }
-            }
-
-            if ( pre < MYP_NUM_PREFIXES ) {
-              strcpy((char*)(actual_file_name_start),(char*)(str+(actual_file_name_start - file_name) + pre_length));
-              const char* last_dot_pos = strrchr(file_name, '.');
-              if( last_dot_pos && (strcmp((char*)(last_dot_pos+1), "stx") == 0)) {
-                file_name[str_length- 3 - pre_length] = 'd';
-                file_name[str_length- 3 - pre_length + 1] = 'd';
-                file_name[str_length- 3 - pre_length + 2] = 's';
-              }
-            }
-          }
-
-        }
-
-        if( !file_name || strlen(file_name) == 0 ) { /* We do not have a name for this hash. We infer the extension*/
-
-          char ext[16];
-          find_extension(data,ext);
-          sprintf((char*)file_name,"%llX.%s", file_descriptor->hash, ext);
-
-        }
-
-        char current_folder[3] = {'.','/', '\0'};
-        if( path == NULL || (strlen(path) == 0) ) {
-          path = current_folder;
-        }
-
-        int path_size = strlen(path);
-        int file_name_size = strlen(file_name);
-        int final_file_name_length = path_size+file_name_size;
-        char* final_file_name = (char*)malloc(sizeof(char*)*final_file_name_length+1);
-        sprintf(final_file_name, "%s/%s", path, file_name);
-
-        /* Creating folders from path */
-        char* sub_path = (char*)malloc(sizeof(char)*final_file_name_length+1);
-        char* next_token = strchr((char*)final_file_name,'/');
-        while(next_token) {
-          next_token++;
-          int end = next_token - final_file_name;
-          strncpy(sub_path, final_file_name, end );
-          sub_path[end] = '\0';
-          mkdir((char*)sub_path, S_IRWXU);
-          next_token = strchr(next_token,'/');
-        }
-
-        FILE* wfp = fopen(final_file_name, "wb");
-        if( wfp ) {
-          fwrite(data, file_descriptor->uncompressed_size, 1, wfp);
-          fclose(wfp);
-        } else {
-          fprintf(stderr, "ERROR creating file %s\n", final_file_name );
-        }
-        free_file_data(data);
-
-        if( (i+1) % 1000  == 0 ) 
-          printf("Extracted %d out of %d files\n",i+1, num_files);
       }
     }
     return 0;
   }
 
-  MYPFileDatabaseStats MYPFileDatabase::get_stats() const {
+  int MYPFileDatabase::extract( const char* file_name, const char* path ) {
 
-    MYPFileDatabaseStats stats;
-    stats.num_files_ = file_descriptors_.size();
-    return stats;
-
+    unsigned int ph = 0;
+    unsigned int sh = 0;
+    hashlittle2(file_name, strlen(file_name), &sh, &ph); 
+    unsigned long long hash  = ((unsigned long long)ph << 32) + sh;
+    size_t num_files = this->file_descriptors_.size();
+    for( size_t i = 0; i < num_files; ++i ) {
+      FileDescriptor* descriptor = &file_descriptors_[i];
+      if ( descriptor->hash == hash ) {
+        return extract(descriptor, path, file_name );
+      }
+    }
+    return MYP_ERROR_FILE_NOT_FOUND;
   }
 
-  int MYPFileDatabase::get_file_data(const char* file_name, unsigned char** data) {
-    *data = NULL;
+  int MYPFileDatabase::extract( const FileDescriptor* file_descriptor, const char* path, const char* output_file_name ) {
+
+    size_t file_name_buffer_size = sizeof(char)*1024;;
+    char* file_name = (char*)malloc(file_name_buffer_size);;
+    unsigned char* data;
+    size_t data_size;
+    get_file_data(file_descriptor,&data, &data_size );
+
+    if( output_file_name == NULL ) {
+      std::map<unsigned long long, std::string>::iterator it = hash_to_file_names_.find( file_descriptor->hash );
+      if( it != hash_to_file_names_.end() ) { /* We have a name for this particular hash */
+
+        const char* str  = it->second.c_str();
+        int str_length = strlen(str);
+
+        if( str_length >= 1024 ) { /* we need a larger file name buffer */
+          file_name_buffer_size *= 1024;
+          file_name = (char*)realloc(file_name,file_name_buffer_size); 
+        }
+        strcpy((char*)file_name, str);
+
+        if( str_length > 0 ) {
+          const char* actual_file_name_start = strrchr((char*)file_name, '/');
+          if( actual_file_name_start != NULL ) {
+            actual_file_name_start++;
+          } else {
+            actual_file_name_start = file_name;
+          }
+
+          /* Check for file name prefixes for renaming the file. We do not want them */
+          int pre_length = 0;
+          int pre = 0;
+          for (int j = 0; j < MYP_NUM_PREFIXES; ++j ) {
+            int length = strlen(name_prefixes[j]);
+            if( strncmp(actual_file_name_start, name_prefixes[j], length) == 0 ) {
+              pre_length = length;
+              pre = j;
+              break;
+            }
+          }
+
+          if ( pre < MYP_NUM_PREFIXES ) {
+            strcpy((char*)(actual_file_name_start),(char*)(str+(actual_file_name_start - file_name) + pre_length));
+            const char* last_dot_pos = strrchr(file_name, '.');
+            if( last_dot_pos && (strcmp((char*)(last_dot_pos+1), "stx") == 0)) {
+              file_name[str_length- 3 - pre_length] = 'd';
+              file_name[str_length- 3 - pre_length + 1] = 'd';
+              file_name[str_length- 3 - pre_length + 2] = 's';
+            }
+          }
+        }
+
+      }
+
+      if( it == hash_to_file_names_.end()  || strlen(file_name) == 0 ) { /* We do not have a name for this hash. We infer the extension*/
+
+        char ext[16];
+        find_extension(data,ext);
+        sprintf((char*)file_name,"%llX.%s", file_descriptor->hash, ext);
+
+      }
+    } else {
+      size_t output_file_name_length = strlen(output_file_name) + 1;
+      if( output_file_name_length >= file_name_buffer_size ) {
+        file_name_buffer_size = output_file_name_length;
+        file_name = (char*)realloc(file_name, file_name_buffer_size);
+      }
+      strcpy(file_name,output_file_name);
+    }
+
+    char current_folder[3] = {'.','/', '\0'};
+    if( path == NULL || (strlen(path) == 0) ) {
+      path = current_folder;
+    }
+
+    int path_size = strlen(path);
+    int file_name_size = strlen(file_name);
+    int final_file_name_length = path_size+file_name_size;
+    char* final_file_name = (char*)malloc(sizeof(char*)*final_file_name_length+1);
+    sprintf(final_file_name, "%s/%s", path, file_name);
+
+    /* Creating folders from path */
+    char* sub_path = (char*)malloc(sizeof(char)*final_file_name_length+1);
+    char* next_token = strchr((char*)final_file_name,'/');
+    while(next_token) {
+      next_token++;
+      int end = next_token - final_file_name;
+      strncpy(sub_path, final_file_name, end );
+      sub_path[end] = '\0';
+      mkdir((char*)sub_path, S_IRWXU);
+      next_token = strchr(next_token,'/');
+    }
+
+    FILE* wfp = fopen(final_file_name, "wb");
+    if( wfp ) {
+      fwrite(data, file_descriptor->uncompressed_size, 1, wfp);
+      fclose(wfp);
+    } else {
+      fprintf(stderr, "ERROR creating file %s\n", final_file_name );
+    }
+    free_file_data(data);
+    free(file_name);
     return 0;
   }
 
-  int MYPFileDatabase::get_file_data(const FileDescriptor* file_descriptor, unsigned char** data) {
+  MYPFileDatabaseStats MYPFileDatabase::get_stats() const {
+    MYPFileDatabaseStats stats;
+    stats.num_files_ = file_descriptors_.size();
+    return stats;
+  }
+
+  int MYPFileDatabase::get_file_data(const char* file_name, unsigned char** data, size_t* data_size) {
+    *data = NULL;
+    unsigned int ph = 0;
+    unsigned int sh = 0;
+    hashlittle2(file_name, strlen(file_name), &sh, &ph); 
+    unsigned long long hash  = ((unsigned long long)ph << 32) + sh;
+    size_t num_files = this->file_descriptors_.size();
+    for( size_t i = 0; i < num_files; ++i ) {
+      FileDescriptor* descriptor = &file_descriptors_[i];
+      if ( descriptor->hash == hash ) {
+        return get_file_data(descriptor, data, data_size );
+      }
+    }
+    return 1;
+  }
+
+  int MYPFileDatabase::get_file_data(const FileDescriptor* file_descriptor, unsigned char** data, size_t* data_size) {
 
         FILE* fp = archive_files_[file_descriptor->archive_index];
+        *data_size = file_descriptor->uncompressed_size;
         *data = (unsigned char*)malloc(sizeof(unsigned char)*file_descriptor->uncompressed_size);;
 
         if( file_descriptor->compression_method != 0 ) { /* It is compressed */

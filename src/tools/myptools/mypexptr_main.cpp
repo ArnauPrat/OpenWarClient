@@ -14,33 +14,59 @@
 			}\
 		}
 
+
+void print_options() {
+  printf("e - Export file\n");
+  printf("q - Quit\n");
+}
+
+void do_exists(owc::MYPFileDatabase* file_database) {
+  char file_name[256];
+  printf("Enter file name: \n");
+  scanf("%256s",file_name);
+  unsigned char* data;
+  size_t data_size;
+  if(file_database->get_file_data((const char*)file_name, &data, &data_size)) {
+    printf("Unexisting file\n");
+    return;
+  }
+
+  printf("Enter output folder: \n");
+  char folder_name[256];
+  scanf("%256s",folder_name);
+  char final_name[512];
+  if(file_database->extract(file_name, folder_name))
+    printf("File extracted: %s\n", final_name);
+}
+
 int main(int argc, const char** argv) {
     printf("Welcome to OpenWarClient MYP file extractor ...\n");
 
+    owc::MYPFileDatabase myp_file;
+
     const char* archive_file_name = NULL;
     const char* hash_file_name = NULL;
-    for (int i = 1; i < argc; i++) {
-        CHECK_ARGUMENT_STRING(i, "-a", archive_file_name)
-        CHECK_ARGUMENT_STRING(i, "-h", hash_file_name)
-    }
-
-    if( archive_file_name ) {
-        printf("Extracting files of archive %s\n", archive_file_name);
-        owc::MYPFileDatabase myp_file;
-        if(myp_file.load_archive(archive_file_name)) {
-          printf("Error when loading file\n");
-        }
-
-        if( hash_file_name ) {
-          if( myp_file.load_hash_dictionary(hash_file_name) ) {
-            printf("Error when reading hashes file\n");
+    for (int i = 1; i < argc; ++i) {
+        if( (strcmp(argv[i],"-a") == 0) ) {
+          i++;
+          while( i < argc ) {
+            printf("Loading archive %s \n", argv[i]);
+            myp_file.load_archive(argv[i]);
+            i++;
           }
         }
-
-        if( myp_file.extract("./extracted_data") ) {
-          printf("Error while extracting archive\n");
-        }
     }
+
+    char option;
+    do {
+      print_options();
+      scanf("\n%c",&option);
+      switch(option) {
+        case 'e':
+          do_exists(&myp_file);
+          break;
+      }
+    } while(option != 'q');
     return 0;
 }
 
