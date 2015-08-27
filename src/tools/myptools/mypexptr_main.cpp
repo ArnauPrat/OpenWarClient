@@ -31,11 +31,12 @@ int main(int argc, const char** argv) {
           printf("Error when loading file\n");
         }
 
-        if( hash_file_name ) {
+/*        if( hash_file_name ) {
           if( myp_file.load_hash_dictionary(hash_file_name) ) {
             printf("Error when reading hashes file\n");
           }
         }
+        */
 
         if( myp_file.extract("./extracted_data") ) {
           printf("Error while extracting archive\n");

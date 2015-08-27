@@ -8,13 +8,12 @@ if(NOT CMAKE_BUILD_TYPE AND NOT CMAKE_CONFIGURATION_TYPES)
   set(CMAKE_BUILD_TYPE Release)
 endif()
 
-set(CMAKE_CXX_FLAGS ${CMAKE_CPP_FLAGS} "-std=c++11 -Wall")
+set(CMAKE_CXX_FLAGS ${CMAKE_CPP_FLAGS} "-std=c++11 -Wall -fno-rtti -fstrict-aliasing -pipe")
 set(CMAKE_CXX_FLAGS_DEBUG "${CMAKE_CPP_FLAGS_DEBUG}  -O0 -g -pg")
 set(CMAKE_CXX_FLAGS_RELEASE "${CMAKE_CPP_FLAGS_RELEASE} -O2 -DNDEBUG ")
 
 
 INCLUDE_DIRECTORIES(./)
-INCLUDE_DIRECTORIES(${IRR_INCLUDE_DIR})
 INCLUDE_DIRECTORIES(${OPENWARCLIENT_LIB_INCLUDE_DIRS})
 
 SET( OPENWARCLIENT_SOURCE_FILES ./main.cpp
@@ -24,6 +23,8 @@ SET( OPENWARCLIENT_SOURCE_FILES ./main.cpp
                                 ./io/Properties.cpp
                                 ./io/Log.cpp
                                 ./io/MYPFileDatabase.cpp
+                                ./io/MYPReader.cpp
+                                ./io/hash.cpp
                                 ./network/NetworkSocket.cpp
   )
 

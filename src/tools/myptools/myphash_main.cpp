@@ -9,7 +9,7 @@ int main(int argc, char** argv) {
     //unsigned long long result = owc::hash(argv[1], 0xDEADBEEF);
     unsigned int ph = 0;
     unsigned int sh = 0;
-    hashlittle2(argv[1], strlen(argv[1]), &sh, &ph); 
+    owc::hashlittle2((const void*)argv[1], (unsigned long)strlen(argv[1]), &sh, &ph); 
     unsigned long long result  = ((unsigned long long)ph << 32) + sh;
     printf("%llX\n",result);
 

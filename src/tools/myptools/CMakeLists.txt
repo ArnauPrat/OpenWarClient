@@ -1,8 +1,6 @@
 CMAKE_MINIMUM_REQUIRED (VERSION 2.8)
 PROJECT( mypexptr )
 
-set( CMAKE_EXPORT_COMPILE_COMMANDS 1 )
-
 if(NOT CMAKE_BUILD_TYPE AND NOT CMAKE_CONFIGURATION_TYPES)
   message(STATUS "Setting build type to 'Release' as none was specified.")
   set(CMAKE_BUILD_TYPE Release)
@@ -13,12 +11,15 @@ set(CMAKE_CPP_FLAGS_DEBUG "${CMAKE_CPP_FLAGS_DEBUG} -O0 -g -pg")
 set(CMAKE_CPP_FLAGS_RELEASE "${CMAKE_CPP_FLAGS_RELEASE} -O2 -DNDEBUG ")
 
 
-INCLUDE_DIRECTORIES(../../client)
+INCLUDE_DIRECTORIES(${CMAKE_SOURCE_DIR}/src/client)
+INCLUDE_DIRECTORIES(${OPENWARCLIENT_LIB_INCLUDE_DIRS})
 SET( MYPEXPTR_SOURCE_FILES  mypexptr_main.cpp 
                             ../../client/io/MYPFileDatabase.cpp 
+                            ../../client/io/hash.cpp
   )
 
 SET( MYPHASH_SOURCE_FILES myphash_main.cpp 
+                            ../../client/io/hash.cpp
   )
 
 SET( MYPNAME_SOURCE_FILES mypname_main.cpp 

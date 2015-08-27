@@ -31,18 +31,6 @@ static const char* name_prefixes[MYP_NUM_PREFIXES] = {"sk.0.0.", "it.0.0.", "fi.
    * Struct definitions
    */
 
-  struct FileDescriptor {
-
-    unsigned long long  table_entry_position;
-    unsigned long long  starting_position;
-    unsigned long long  hash;
-    unsigned int        header_size;
-    unsigned int        compressed_size;
-    unsigned int        uncompressed_size;
-    unsigned char       compression_method;
-    unsigned char       archive_index;
-
-  };
 
   struct TableBlockHeader {
 
@@ -73,7 +61,7 @@ static const char* name_prefixes[MYP_NUM_PREFIXES] = {"sk.0.0.", "it.0.0.", "fi.
   }
 
 
-  static void initialize_FileDescriptor(FileDescriptor* descriptor, const unsigned char* buffer, unsigned int offset) {
+  static void initialize_FileDescriptor(MYPFileDescriptor* descriptor, const unsigned char* buffer, unsigned int offset) {
 
     descriptor->starting_position   = parse_ulong(buffer, offset + 0);            
     descriptor->header_size         = parse_uint(buffer, offset + 8);
@@ -132,7 +120,7 @@ static const char* name_prefixes[MYP_NUM_PREFIXES] = {"sk.0.0.", "it.0.0.", "fi.
     unsigned char* myp_file_descriptor_buffer = (unsigned char*)malloc(sizeof(unsigned char)*myp_file_descriptor_buffer_size);
 
     /* Create buffers to store file descriptors. Initial size to 1000 as it is typically observed in practice.  */
-    FileDescriptor aux_file_descriptor;
+    MYPFileDescriptor aux_file_descriptor;
 
     int error_code = 0;
     FILE* fp = fopen(file_name, "rb");
@@ -391,7 +379,7 @@ error:
       char* file_name = (char*)malloc(file_name_buffer_size);;
       for ( int i = 0; i < num_files; ++i ) {
 
-        FileDescriptor* file_descriptor = &file_descriptors_[i];
+        MYPFileDescriptor* file_descriptor = &file_descriptors_[i];
 
         unsigned char* data;
         get_file_data(file_descriptor,&data);
@@ -501,7 +489,7 @@ error:
     return 0;
   }
 
-  int MYPFileDatabase::get_file_data(const FileDescriptor* file_descriptor, unsigned char** data) {
+  int MYPFileDatabase::get_file_data(const MYPFileDescriptor* file_descriptor, unsigned char** data) {
 
         FILE* fp = archive_files_[file_descriptor->archive_index];
         *data = (unsigned char*)malloc(sizeof(unsigned char)*file_descriptor->uncompressed_size);;

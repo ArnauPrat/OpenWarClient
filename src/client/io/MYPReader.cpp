@@ -4,20 +4,26 @@
 // Code contributed by skreamz
 
 #include "MYPReader.h"
+#include "CFileSystem.h"
+#include "hash.h"
 
 
 #include "os.h"
 #include "coreutil.h"
+#include <string.h>
+
+using namespace irr;
 
 namespace owc 
 {
 
-namespace {
-inline bool isHeaderValid(const SPAKFileHeader& header)
-{
-  return false;
-}
-}
+    namespace {
+
+        inline bool isHeaderValid(const char header[4])
+        {
+            return strcmp(header, "MYP") == 0;
+        }
+    }
 
 //! Constructor
 MYPArchiveLoader::MYPArchiveLoader( io::IFileSystem* fs)
@@ -36,17 +42,17 @@ bool MYPArchiveLoader::isALoadableFileFormat(const io::path& filename) const
 }
 
 //! Check to see if the loader can create archives of this type.
-bool MYPArchiveLoader::isALoadableFileFormat(E_FILE_ARCHIVE_TYPE fileType) const
+bool MYPArchiveLoader::isALoadableFileFormat( io::E_FILE_ARCHIVE_TYPE fileType) const
 {
-	return fileType == EFAT_MYP;
+	return fileType == io::EFAT_MYP;
 }
 
 //! Creates an archive from the filename
 /** \param file File handle to check.
 \return Pointer to newly created archive, or 0 upon error. */
-IFileArchive* MYPArchiveLoader::createArchive(const io::path& filename, bool ignoreCase, bool ignorePaths) const
+io::IFileArchive* MYPArchiveLoader::createArchive(const io::path& filename, bool ignoreCase, bool ignorePaths) const
 {
-	IFileArchive *archive = 0;
+    io::IFileArchive *archive = 0;
 	io::IReadFile* file = FileSystem->createAndOpenFile(filename);
 
 	if (file)
@@ -60,9 +66,9 @@ IFileArchive* MYPArchiveLoader::createArchive(const io::path& filename, bool ign
 
 //! creates/loads an archive from the file.
 //! \return Pointer to the created archive. Returns 0 if loading failed.
-IFileArchive* MYPArchiveLoader::createArchive(io::IReadFile* file, bool ignoreCase, bool ignorePaths) const
+io::IFileArchive* MYPArchiveLoader::createArchive(io::IReadFile* file, bool ignoreCase, bool ignorePaths) const
 {
-	IFileArchive *archive = 0;
+    io::IFileArchive *archive = 0;
 	if ( file )
 	{
 		file->seek ( 0 );
@@ -78,9 +84,10 @@ IFileArchive* MYPArchiveLoader::createArchive(io::IReadFile* file, bool ignoreCa
 \return True if file seems to be loadable. */
 bool MYPArchiveLoader::isALoadableFileFormat(io::IReadFile* file) const
 {
-	SPAKFileHeader header;
+	char header[4];
 
 	file->read(&header, sizeof(header));
+    header[3] = '\0';
 
 	return isHeaderValid(header);
 }
@@ -89,8 +96,9 @@ bool MYPArchiveLoader::isALoadableFileFormat(io::IReadFile* file) const
 /*!
 	MYP Reader
 */
-MYPReader::MYPReader(IReadFile* file, bool ignoreCase, bool ignorePaths)
-: CFileList((file ? file->getFileName() : io::path("")), ignoreCase, ignorePaths), File(file)
+MYPReader::MYPReader( io::IReadFile* file, bool ignoreCase, bool ignorePaths) :
+ io::CFileList((file ? file->getFileName() : io::path("")), ignoreCase, ignorePaths), 
+ File(file)
 {
 #ifdef _DEBUG
 	setDebugName("MYPReader");
@@ -99,6 +107,9 @@ MYPReader::MYPReader(IReadFile* file, bool ignoreCase, bool ignorePaths)
 	if (File)
 	{
     /** grab File */
+        File->grab();
+        load_files();
+        sort();
 	}
 }
 
@@ -109,17 +120,35 @@ MYPReader::~MYPReader()
 		File->drop();
 }
 
+void MYPReader::load_files() {
+    myp_file_database.load_archive(File->getFileName().c_str());
+    const std::vector<MYPFileDescriptor>* descriptors = myp_file_database.get_descriptors(); 
+    u32 index = 0;
+    for( std::vector<MYPFileDescriptor>::const_iterator it = descriptors->begin(); it != descriptors->end(); ++it) {
+        c8 file_name[9];
+        sprintf(file_name, "%llu", it->hash);
+		addItem(io::path(file_name), it->starting_position, it->uncompressed_size, false, index++ );
+    }
+}
 
-const IFileList* MYPReader::getFileList() const
+
+const io::IFileList* MYPReader::getFileList() const
 {
 	return this;
 }
 
 
 //! opens a file by file name
-IReadFile* MYPReader::createAndOpenFile(const io::path& filename)
+io::IReadFile* MYPReader::createAndOpenFile(const io::path& filename)
 {
-	s32 index = findFile(filename, false);
+
+    unsigned int ph = 0;
+    unsigned int sh = 0;
+    hashlittle2(filename.c_str(), filename.size(), &sh, &ph); 
+    unsigned long long result  = ((unsigned long long)ph << 32) + sh;
+    c8 file_name[9];
+    sprintf(file_name, "%llu", result);
+	s32 index = findFile(file_name, false);
 
 	if (index != -1)
 		return createAndOpenFile(index);
@@ -129,14 +158,21 @@ IReadFile* MYPReader::createAndOpenFile(const io::path& filename)
 
 
 //! opens a file by index
-IReadFile* MYPReader::createAndOpenFile(u32 index)
+io::IReadFile* MYPReader::createAndOpenFile(u32 index)
 {
 	if (index >= Files.size() )
 		return 0;
 
-	const SFileListEntry &entry = Files[index];
+	const io::SFileListEntry &entry = Files[index];
     // Get additional information regarding MYP files.
-	return createLimitReadFile( entry.FullName, File, entry.Offset, entry.Size );
+    MYPFileDescriptor desc = myp_file_database.get_file_descriptor(entry.ID);
+    if( desc.compression_method ) {
+        unsigned char* data;
+        myp_file_database.get_file_data(&desc,&data);
+        return io::createMemoryReadFile((void*)data, desc.uncompressed_size, entry.FullName,true);
+    } else {
+        return io::createLimitReadFile( entry.FullName, File, entry.Offset, entry.Size );
+    }
 }
 
 } // end namespace owc 
