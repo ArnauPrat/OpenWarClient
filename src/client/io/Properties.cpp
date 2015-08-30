@@ -7,6 +7,7 @@
 #include <sstream>
 
 
+namespace owc {
 Properties::Properties() {
 
 }
@@ -55,4 +56,6 @@ void Properties::print( FILE* fp ) {
         ++it) {
     fprintf(stdout, "%s %s\n", it->first.c_str(), it->second.c_str());
   }
+}
+
 }

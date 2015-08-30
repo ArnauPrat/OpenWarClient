@@ -168,7 +168,8 @@ io::IReadFile* MYPReader::createAndOpenFile(u32 index)
     MYPFileDescriptor desc = myp_file_database.get_file_descriptor(entry.ID);
     if( desc.compression_method ) {
         unsigned char* data;
-        myp_file_database.get_file_data(&desc,&data);
+        size_t data_size;
+        myp_file_database.get_file_data(&desc,&data, &data_size);
         return io::createMemoryReadFile((void*)data, desc.uncompressed_size, entry.FullName,true);
     } else {
         return io::createLimitReadFile( entry.FullName, File, entry.Offset, entry.Size );

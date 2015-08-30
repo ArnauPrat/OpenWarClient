@@ -4,8 +4,12 @@
 #define OWCLIENT_H
 
 #include "common/macros.h"
+#include "io/MYPReader.h"
 #include "io/Properties.h"
+#include <irrlicht.h>
 #include <string>
+
+using namespace irr;
 
 namespace owc {
 
@@ -21,17 +25,25 @@ namespace owc {
 
     public:
 
-    static void init();
-    static void free();
-    static void run( const Properties* properties);
+    static int init( const c8* config_file_name );
+    static int free();
+    static int run();
 
     private:
 
 
     static std::string   user_name_;
     static std::string   token_;
-
     static Status  client_status_;
+
+    static IrrlichtDevice*        device_;
+    static video::IVideoDriver*   driver_;
+    static scene::ISceneManager*  smgr_;
+    static gui::IGUIEnvironment*  guienv_;
+    static io::IFileSystem*       fsystem_;
+    
+    static Properties*            properties_;
+    static MYPArchiveLoader*      myp_archive_loader_;
 
   };
 }

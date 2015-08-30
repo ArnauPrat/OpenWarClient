@@ -66,11 +66,11 @@ namespace owc {
 
       MYPFileDescriptor get_file_descriptor( int index ) const { return file_descriptors_[index]; } 
 
-      int get_file_data(const MYPFileDescriptor* file_descriptor, unsigned char** data);
+      int get_file_data(const MYPFileDescriptor* file_descriptor, unsigned char** data, size_t* data_size);
 
       void add_hash_to_filename_entry( const char* line );
 
-      int extract( const FileDescriptor* file_descriptor, const char* path, const char* output_file_name = NULL );
+      int extract( const MYPFileDescriptor* file_descriptor, const char* path, const char* output_file_name = NULL );
 
     private:
       std::vector<char*>                          archive_names_; 

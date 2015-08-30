@@ -397,7 +397,7 @@ error:
     unsigned long long hash  = ((unsigned long long)ph << 32) + sh;
     size_t num_files = this->file_descriptors_.size();
     for( size_t i = 0; i < num_files; ++i ) {
-      FileDescriptor* descriptor = &file_descriptors_[i];
+      MYPFileDescriptor* descriptor = &file_descriptors_[i];
       if ( descriptor->hash == hash ) {
         return extract(descriptor, path, file_name );
       }
@@ -405,7 +405,7 @@ error:
     return MYP_ERROR_FILE_NOT_FOUND;
   }
 
-  int MYPFileDatabase::extract( const FileDescriptor* file_descriptor, const char* path, const char* output_file_name ) {
+  int MYPFileDatabase::extract( const MYPFileDescriptor* file_descriptor, const char* path, const char* output_file_name ) {
 
     size_t file_name_buffer_size = sizeof(char)*1024;;
     char* file_name = (char*)malloc(file_name_buffer_size);;
@@ -524,7 +524,7 @@ error:
     unsigned long long hash  = ((unsigned long long)ph << 32) + sh;
     size_t num_files = this->file_descriptors_.size();
     for( size_t i = 0; i < num_files; ++i ) {
-      FileDescriptor* descriptor = &file_descriptors_[i];
+      MYPFileDescriptor* descriptor = &file_descriptors_[i];
       if ( descriptor->hash == hash ) {
         return get_file_data(descriptor, data, data_size );
       }

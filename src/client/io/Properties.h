@@ -7,6 +7,7 @@
 #include <string>
 
 
+namespace owc {
 
 class Properties {
   OWC_NON_COPYABLE(Properties);
@@ -27,6 +28,8 @@ class Properties {
     std::map<std::string, std::string>  properties_;
 
 };
+
+}
 
 
 #endif 
