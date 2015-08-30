@@ -20,7 +20,7 @@ INCLUDE_DIRECTORIES(${OPENWARCLIENT_LIB_INCLUDE_DIRS})
 SET( OPENWARCLIENT_SOURCE_FILES ./main.cpp
                                 ./OWClient.cpp
                                 ./login_sequence.cpp
-                                ./common/marshalling.cpp
+                                ./core/marshalling.cpp
                                 ./io/Properties.cpp
                                 ./io/Log.cpp
                                 ./io/MYPFileDatabase.cpp

@@ -2,12 +2,13 @@
 #ifndef OWC_PROPERTIES_H
 #define OWC_PROPERTIES_H
 
-#include "common/macros.h"
+#include "core/macros.h"
 #include <map>
 #include <string>
 
 
 namespace owc {
+
 
 class Properties {
   OWC_NON_COPYABLE(Properties);

@@ -1,7 +1,6 @@
 
 
 #include "OWClient.h"
-#include "io/Log.h"
 #include "login_sequence.h"
 #include "network/NetworkSocket.h"
 #include <string>
@@ -18,27 +17,30 @@ namespace owc {
   scene::ISceneManager*   OWClient::smgr_ = NULL;
   gui::IGUIEnvironment*   OWClient::guienv_ = NULL;
   io::IFileSystem*        OWClient::fsystem_ = NULL;
+  ILogger*                OWClient::logger_ = NULL;
 
   Properties*             OWClient::properties_ = NULL;
+
   MYPArchiveLoader*       OWClient::myp_archive_loader_ = NULL;
+
+
 
   int OWClient::init( const c8* config_file_name ) {
 
     /** Starting logging system */
-    Log::open("./log.txt");
     properties_ = new Properties();
 
     /** Reading configuration file **/
     Properties properties;
     int res = properties.load(config_file_name);
     if(res) return res;
-    return 0;
 
     /** Initializing Irrlicht subsystems **/
     device_ = createDevice( video::EDT_SOFTWARE, core::dimension2d<u32>(640, 480), 16,
           false, false, false, 0);
     if (!device_)
       return 1;
+
 
     fsystem_ = device_->getFileSystem();
     device_->setWindowCaption(L"Hello World! - Irrlicht Engine Demo");
@@ -48,21 +50,38 @@ namespace owc {
     guienv_->addStaticText(L"Hello World! This is the Irrlicht Software renderer!",
         core::rect<s32>(10,10,260,22), true);
     smgr_->addCameraSceneNode(0, core::vector3df(0,30,-40), core::vector3df(0,5,0));
+    logger_ = device_->getLogger();
 
     /** Adding resource files and directories **/
     std::string data_dir = properties.get("data_dir");
     myp_archive_loader_ = new MYPArchiveLoader( fsystem_ );
     fsystem_->addArchiveLoader( myp_archive_loader_ ); 
+    logger_->log("Loading art.myp", irr::ELL_INFORMATION);
     fsystem_->addFileArchive( io::path(data_dir.c_str()).append("/").append("art.myp"), false, false, io::EFAT_MYP);
+    logger_->log("Loading art2.myp", irr::ELL_INFORMATION);
+    fsystem_->addFileArchive( io::path(data_dir.c_str()).append("/").append("art2.myp"), false, false, io::EFAT_MYP);
+    logger_->log("Loading art3.myp", irr::ELL_INFORMATION);
+    fsystem_->addFileArchive( io::path(data_dir.c_str()).append("/").append("art3.myp"), false, false, io::EFAT_MYP);
+    logger_->log("Loading data.myp", irr::ELL_INFORMATION);
+    fsystem_->addFileArchive( io::path(data_dir.c_str()).append("/").append("data.myp"), false, false, io::EFAT_MYP);
+    logger_->log("Loading world.myp", irr::ELL_INFORMATION);
+    fsystem_->addFileArchive( io::path(data_dir.c_str()).append("/").append("world.myp"), false, false, io::EFAT_MYP);
+    logger_->log("Loading interface.myp", irr::ELL_INFORMATION);
+    fsystem_->addFileArchive( io::path(data_dir.c_str()).append("/").append("interface.myp"), false, false, io::EFAT_MYP);
+    logger_->log("Loading mft.myp", irr::ELL_INFORMATION);
+    fsystem_->addFileArchive( io::path(data_dir.c_str()).append("/").append("mft.myp"), false, false, io::EFAT_MYP);
+    logger_->log("Loading patch.myp", irr::ELL_INFORMATION);
+    fsystem_->addFileArchive( io::path(data_dir.c_str()).append("/").append("patch.myp"), false, false, io::EFAT_MYP);
+    logger_->log("Loading vo_english.myp", irr::ELL_INFORMATION);
+    fsystem_->addFileArchive( io::path(data_dir.c_str()).append("/").append("vo_english.myp"), false, false, io::EFAT_MYP);
     return 0;
   }
 
   int OWClient::free() {
 
-    delete myp_archive_loader_;
     device_->drop();
+    delete myp_archive_loader_;
     delete properties_;
-    Log::close();
     return 0;
   }
 
@@ -74,12 +93,10 @@ namespace owc {
             properties->get("passwd").c_str(), 
             properties->get("server_ip").c_str(), 
             atoi(properties->get("server_port").c_str()), &token ) ) {
-          Log::write("ERROR", "Error logging in");
           return;
         }
         token_ = token;
         ::free(token);
-        Log::write("INFO",token_.c_str());
         client_status_ = E_LOGGED_IN;
         });
     t.join();

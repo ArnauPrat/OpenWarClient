@@ -3,7 +3,7 @@
 #ifndef OWCLIENT_H
 #define OWCLIENT_H
 
-#include "common/macros.h"
+#include "core/macros.h"
 #include "io/MYPReader.h"
 #include "io/Properties.h"
 #include <irrlicht.h>
@@ -41,9 +41,12 @@ namespace owc {
     static scene::ISceneManager*  smgr_;
     static gui::IGUIEnvironment*  guienv_;
     static io::IFileSystem*       fsystem_;
+    static ILogger*               logger_;
     
     static Properties*            properties_;
+
     static MYPArchiveLoader*      myp_archive_loader_;
+
 
   };
 }

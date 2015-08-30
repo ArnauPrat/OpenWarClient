@@ -2,12 +2,13 @@
 #ifndef OWC_NETWORK_CLIENT_H
 #define OWC_NETWORK_CLIENT_H
 
-#include "common/macros.h"
+#include "core/macros.h"
 #include <asio.hpp>
 
 #define OWC_IP_STRING_LENGTH 16
 
 namespace owc {
+
 
   typedef asio::ip::tcp tcp;
   typedef asio::ip::udp udp;

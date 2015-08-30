@@ -124,10 +124,12 @@ void MYPReader::load_files() {
     myp_file_database.load_archive(File->getFileName().c_str());
     const std::vector<MYPFileDescriptor>* descriptors = myp_file_database.get_descriptors(); 
     u32 index = 0;
-    for( std::vector<MYPFileDescriptor>::const_iterator it = descriptors->begin(); it != descriptors->end(); ++it) {
-        c8 file_name[9];
-        sprintf(file_name, "%llu", it->hash);
-		addItem(io::path(file_name), it->starting_position, it->uncompressed_size, false, index++ );
+    size_t size = descriptors->size();
+    for( size_t i = 0; i < size; ++i ) {
+        const MYPFileDescriptor* descriptor = &((*descriptors)[i]);
+        c8 file_name[17];
+        sprintf(file_name, "%llX", descriptor->hash);
+		addItem(io::path(file_name), descriptor->starting_position, descriptor->uncompressed_size, false, index++ );
     }
 }
 
@@ -146,8 +148,8 @@ io::IReadFile* MYPReader::createAndOpenFile(const io::path& filename)
     unsigned int sh = 0;
     hashlittle2(filename.c_str(), filename.size(), &sh, &ph); 
     unsigned long long result  = ((unsigned long long)ph << 32) + sh;
-    c8 file_name[9];
-    sprintf(file_name, "%llu", result);
+    c8 file_name[17];
+    sprintf(file_name, "%llX", result);
 	s32 index = findFile(file_name, false);
 
 	if (index != -1)

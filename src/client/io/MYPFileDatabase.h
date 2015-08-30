@@ -6,7 +6,7 @@
 #include <map>
 #include <string>
 #include <vector>
-#include "../common/macros.h"
+#include "../core/macros.h"
 
 namespace owc {
 
@@ -14,70 +14,68 @@ namespace owc {
 #define MYP_ERROR_NFILES_MISSMATCH  0x02
 #define MYP_ERROR_FILE_NOT_FOUND    0x03
 
+        struct MYPFileDescriptor {
+
+            unsigned long long  table_entry_position;
+            unsigned long long  starting_position;
+            unsigned long long  hash;
+            unsigned int        header_size;
+            unsigned int        compressed_size;
+            unsigned int        uncompressed_size;
+            unsigned char       compression_method;
+            unsigned char       archive_index;
+
+        };
+
+        struct MYPFileDatabaseStats {
+            public:
+                int num_files_;
+        };
 
 
-  struct MYPFileDescriptor {
+        class MYPFileDatabase {
+            OWC_NON_COPYABLE(MYPFileDatabase);
 
-    unsigned long long  table_entry_position;
-    unsigned long long  starting_position;
-    unsigned long long  hash;
-    unsigned int        header_size;
-    unsigned int        compressed_size;
-    unsigned int        uncompressed_size;
-    unsigned char       compression_method;
-    unsigned char       archive_index;
+            friend class MYPReader;
 
-  };
+            public:
 
-  struct MYPFileDatabaseStats {
-    public:
-      int num_files_;
-  };
+            MYPFileDatabase();
+            ~MYPFileDatabase();
 
+            int load_archive( const char* file_name );
 
-  class MYPFileDatabase {
-    OWC_NON_COPYABLE(MYPFileDatabase);
+            int load_hash_dictionary( const char* file_name );
 
-    friend class MYPReader;
+            int extract( const char* path );
 
-    public:
+            int extract( const char* file_name, const char* path );
 
-      MYPFileDatabase();
-      ~MYPFileDatabase();
+            MYPFileDatabaseStats get_stats() const;
 
-      int load_archive( const char* file_name );
+            int get_file_data(const char* file_name, unsigned char** data, size_t* data_size);
 
-      int load_hash_dictionary( const char* file_name );
-
-      int extract( const char* path );
-
-      int extract( const char* file_name, const char* path );
-
-      MYPFileDatabaseStats get_stats() const;
-
-      int get_file_data(const char* file_name, unsigned char** data, size_t* data_size);
-
-      int free_file_data( unsigned char* data);
+            int free_file_data( unsigned char* data);
 
 
-    private:
+            private:
 
-      const std::vector<MYPFileDescriptor>* get_descriptors() const { return &file_descriptors_; }
+            const std::vector<MYPFileDescriptor>* get_descriptors() const { return &file_descriptors_; }
 
-      MYPFileDescriptor get_file_descriptor( int index ) const { return file_descriptors_[index]; } 
+            MYPFileDescriptor get_file_descriptor( int index ) const { return file_descriptors_[index]; } 
 
-      int get_file_data(const MYPFileDescriptor* file_descriptor, unsigned char** data, size_t* data_size);
+            int get_file_data(const MYPFileDescriptor* file_descriptor, unsigned char** data, size_t* data_size);
 
-      void add_hash_to_filename_entry( const char* line );
+            void add_hash_to_filename_entry( const char* line );
 
-      int extract( const MYPFileDescriptor* file_descriptor, const char* path, const char* output_file_name = NULL );
+            int extract( const MYPFileDescriptor* file_descriptor, const char* path, const char* output_file_name = NULL );
 
-    private:
-      std::vector<char*>                          archive_names_; 
-      std::vector<FILE*>                          archive_files_;                                       
-      std::vector<MYPFileDescriptor>                 file_descriptors_;
-      std::map<unsigned long long, std::string>   hash_to_file_names_;
-  };
+            private:
+            std::vector<char*>                          archive_names_; 
+            std::vector<FILE*>                          archive_files_;                                       
+            std::vector<MYPFileDescriptor>                 file_descriptors_;
+            std::map<unsigned long long, std::string>   hash_to_file_names_;
+        };
 
 }
 
