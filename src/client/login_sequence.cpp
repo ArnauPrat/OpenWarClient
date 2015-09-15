@@ -4,7 +4,6 @@
 #include "core/marshalling.h"
 #include "crypt/sha256.h"
 #include "error_codes.h"
-#include "io/Log.h"
 #include "login_sequence.h"
 #include "network/NetworkSocket.h"
 #include <stdio.h>
@@ -14,7 +13,7 @@ namespace owc {
 
   int login( const char* user_name, const char* passwd, const char* server_ip, unsigned int port, char** token ) {
 
-    Log::write("INFO", "Starting login to server");
+    //Log::write("INFO", "Starting login to server");
     TCPSocket login_client;
     if( int ret = login_client.connect(server_ip, port)) {
       return ret;
@@ -35,7 +34,7 @@ namespace owc {
     write_be(buffer,current_position,OWC_SHA256_BUFFER_SIZE);
     current_position+=4;
 
-    Log::write("INFO","Creating SHA256 user/pass string");
+    //Log::write("INFO","Creating SHA256 user/pass string");
     unsigned char sha256_input_buffer[512];
     unsigned char sha256_output_buffer[OWC_SHA256_BUFFER_SIZE];
     sprintf((char*)sha256_input_buffer,"%s:%s",user_name,passwd);
@@ -49,7 +48,7 @@ namespace owc {
 
     write_be(buffer, 0, current_position - 4);
 
-    Log::write("INFO","Sending user and password");
+    //Log::write("INFO","Sending user and password");
     size_t num_bytes;
     if( int ret = login_client.write(buffer,current_position, &num_bytes) ) {
       return ret;
@@ -58,7 +57,7 @@ namespace owc {
     if( int ret = login_client.read(buffer, 1024, &num_bytes) ) {
       return ret;
     }
-    Log::write("INFO","Login server responded");
+    //Log::write("INFO","Login server responded");
 
     unsigned int packet_length = 0;
     current_position = 0;
@@ -72,7 +71,7 @@ namespace owc {
     read(buffer, current_position, &val);
     current_position += sizeof(unsigned char);
     if( val == 0 ) {
-      Log::write("INFO","Correct user and password");
+      //Log::write("INFO","Correct user and password");
       unsigned int token_length = 0;
       read_be(buffer, current_position,  &token_length);
       current_position+=sizeof(unsigned int);
