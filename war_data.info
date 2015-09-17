@@ -1,0 +1,17 @@
+*************************************************************************
+This file contains information about how WAR's data assets are structured
+
+
+
+*****
+Zones
+*****
+
+General zone information is stored in the file zones/zones.dat. This file contains general information about Each zone's
+identifier, name, region, pairing, tier, skydome, entry music, etc.
+
+Specific zone information such as assets to load, where water is located, lights position, textures, etc, is located in
+several files that are rooted at the zones/zoneXXX/ folder, where XXX is a three digit decimal number representing the
+zone id. Now I list the files that can be found in this folder and summarize their content:
+
+- fixtures.csv: 

@@ -113,7 +113,6 @@ namespace owc {
     }
 
     return 0;
-
   }
 
 }
