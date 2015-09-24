@@ -36,7 +36,10 @@ namespace owc {
     if(res) return res;
 
     /** Initializing Irrlicht subsystems **/
-    device_ = createDevice( video::EDT_SOFTWARE, core::dimension2d<u32>(640, 480), 16,
+    /*device_ = createDevice( video::EDT_SOFTWARE, core::dimension2d<u32>(640, 480), 16,
+          false, false, false, 0);*/
+
+    device_ = createDevice( video::EDT_OPENGL, core::dimension2d<u32>(640, 480), 16,
           false, false, false, 0);
     if (!device_)
       return 1;
@@ -49,7 +52,8 @@ namespace owc {
     guienv_ = device_->getGUIEnvironment();
     guienv_->addStaticText(L"Hello World! This is the Irrlicht Software renderer!",
         core::rect<s32>(10,10,260,22), true);
-    smgr_->addCameraSceneNode(0, core::vector3df(0,30,-40), core::vector3df(0,5,0));
+    //smgr_->addCameraSceneNode(0, core::vector3df(0,30,-40), core::vector3df(0,5,0));
+    smgr_->addCameraSceneNodeFPS();
     logger_ = device_->getLogger();
 
     /** Adding resource files and directories **/
@@ -74,6 +78,23 @@ namespace owc {
     fsystem_->addFileArchive( io::path(data_dir.c_str()).append("/").append("patch.myp"), false, false, io::EFAT_MYP);
     logger_->log("Loading vo_english.myp", irr::ELL_INFORMATION);
     fsystem_->addFileArchive( io::path(data_dir.c_str()).append("/").append("vo_english.myp"), false, false, io::EFAT_MYP);
+
+
+    scene::ITerrainSceneNode* terrain = smgr_->addTerrainSceneNode(
+        "zones/zone101/terrain.pcx",
+        0,                  
+        -1,                 
+        core::vector3df(0.0f, 0.f, 0.f),     // position
+        core::vector3df(0.0f, 0.f, 0.f),     // rotation
+        core::vector3df(1.0f, 1.0f, 1.0f),  // scale
+        video::SColor ( 255, 255, 255, 255 ),   // vertexColor
+        5,                  
+        scene::ETPS_17,             
+        4                   
+        );
+
+    terrain->setMaterialFlag(video::EMF_WIREFRAME, true);
+
     return 0;
   }
 
