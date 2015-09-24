@@ -1,0 +1,5 @@
+
+TODO:
+- allow loading multiple myp archives
+- multiples fopen
+- usar les mateixes funcions de parseig de valors a tot arreu
