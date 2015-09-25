@@ -167,6 +167,7 @@ namespace scene
 				vertex.Color = vertexColor;
 				vertex.Pos.X = fx;
 				vertex.Pos.Y = (f32) heightMap->getPixel(TerrainData.Size-x-1,z).getLightness();
+        //printf("%u, %u, %u, %f\n",heightMap->getPixel(TerrainData.Size-x-1,z).getRed(), heightMap->getPixel(TerrainData.Size-x-1,z).getGreen(),heightMap->getPixel(TerrainData.Size-x-1,z).getBlue(), heightMap->getPixel(TerrainData.Size-x-1,z).getLightness());
 				vertex.Pos.Z = fz;
 
 				vertex.TCoords.X = vertex.TCoords2.X = 1.f-fx2;

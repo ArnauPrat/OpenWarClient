@@ -86,11 +86,11 @@ namespace owc {
         -1,                 
         core::vector3df(0.0f, 0.f, 0.f),     // position
         core::vector3df(0.0f, 0.f, 0.f),     // rotation
-        core::vector3df(10.0f, 10.0f, 10.0f),  // scale
+        core::vector3df(1.0f, 1.0f, 1.0f),  // scale
         video::SColor ( 255, 255, 255, 255 ),   // vertexColor
-        5,                  
+        3,                  
         scene::ETPS_17,             
-        1                   
+        0                   
         );
 
     terrain->setMaterialFlag(video::EMF_WIREFRAME, true);

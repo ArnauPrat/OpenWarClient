@@ -98,6 +98,7 @@ IImage* CImageLoaderPCX::loadImage(io::IReadFile* file) const
 					(tempPalette[i*3+0] << 16) |
 					(tempPalette[i*3+1] << 8) |
 					(tempPalette[i*3+2]));
+      //printf("%d, %d, %d\n", tempPalette[i*3+0], tempPalette[i*3+1], tempPalette[i*3+2]);
 		}
 
 		delete [] tempPalette;
@@ -137,8 +138,9 @@ IImage* CImageLoaderPCX::loadImage(io::IReadFile* file) const
 			cnt &= 0x3f;
 			file->read(&value, 1);
 		}
-		if (header.Planes==1)
+		if (header.Planes==1) {
 			memset(PCXData+offset, value, cnt);
+    }
 		else
 		{
 			for (u8 i=0; i<cnt; ++i)
@@ -169,9 +171,11 @@ IImage* CImageLoaderPCX::loadImage(io::IReadFile* file) const
 		switch(header.Planes) // TODO: Other formats
 		{
 		case 1:
-			image = new CImage(ECF_A1R5G5B5, core::dimension2d<u32>(width, height));
+			//image = new CImage(ECF_A1R5G5B5, core::dimension2d<u32>(width, height));
+			image = new CImage(ECF_A8R8G8B8, core::dimension2d<u32>(width, height));
 			if (image)
-				CColorConverter::convert8BitTo16Bit(PCXData, (s16*)image->lock(), width, height, paletteData, pad);
+				//CColorConverter::convert8BitTo16Bit(PCXData, (s16*)image->lock(), width, height, paletteData, pad);
+				CColorConverter::convert8BitTo32Bit(PCXData, (u8*)image->lock(), width, height, (u8*)paletteData, pad);
 			break;
 		case 3:
 			image = new CImage(ECF_R8G8B8, core::dimension2d<u32>(width, height));
