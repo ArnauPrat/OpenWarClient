@@ -39,7 +39,7 @@ namespace owc {
     /*device_ = createDevice( video::EDT_SOFTWARE, core::dimension2d<u32>(640, 480), 16,
           false, false, false, 0);*/
 
-    device_ = createDevice( video::EDT_OPENGL, core::dimension2d<u32>(640, 480), 16,
+    device_ = createDevice( video::EDT_OPENGL, core::dimension2d<u32>(1280, 720), 16,
           false, false, false, 0);
     if (!device_)
       return 1;
@@ -81,16 +81,16 @@ namespace owc {
 
 
     scene::ITerrainSceneNode* terrain = smgr_->addTerrainSceneNode(
-        "zones/zone101/terrain.pcx",
+        "zones/zone101/offset.pcx",
         0,                  
         -1,                 
         core::vector3df(0.0f, 0.f, 0.f),     // position
         core::vector3df(0.0f, 0.f, 0.f),     // rotation
-        core::vector3df(1.0f, 1.0f, 1.0f),  // scale
+        core::vector3df(10.0f, 10.0f, 10.0f),  // scale
         video::SColor ( 255, 255, 255, 255 ),   // vertexColor
         5,                  
         scene::ETPS_17,             
-        4                   
+        1                   
         );
 
     terrain->setMaterialFlag(video::EMF_WIREFRAME, true);
