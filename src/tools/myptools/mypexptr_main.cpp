@@ -29,11 +29,11 @@ void do_exists(owc::MYPFileDatabase* file_database) {
   printf("Enter file name: \n");
   scanf("%256s",file_name);
   unsigned char* data;
-/*  size_t data_size;
+  size_t data_size;
   if(file_database->get_file_data((const char*)file_name, &data, &data_size)) {
     printf("Unexisting file\n");
     return;
-  }*/
+  }
 
   printf("Enter output folder: \n");
   char folder_name[256];
