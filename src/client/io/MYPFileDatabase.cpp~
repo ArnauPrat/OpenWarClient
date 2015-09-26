@@ -494,11 +494,8 @@ error:
                 int end = next_token - final_file_name;
                 strncpy(sub_path, final_file_name, end );
                 sub_path[end] = '\0';
-#ifdef LINUX
                 mkdir((char*)sub_path, S_IRWXU);
-#endif
                 next_token = strchr(next_token,'/');
-
             }
 
             FILE* wfp = fopen(final_file_name, "wb");
