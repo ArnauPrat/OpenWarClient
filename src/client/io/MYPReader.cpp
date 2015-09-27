@@ -6,6 +6,7 @@
 #include "MYPReader.h"
 #include "CFileSystem.h"
 #include "hash.h"
+#include <inttypes.h>
 
 
 #include "os.h"
@@ -128,8 +129,23 @@ void MYPReader::load_files() {
     for( size_t i = 0; i < size; ++i ) {
         const MYPFileDescriptor* descriptor = &((*descriptors)[i]);
         c8 file_name[17];
+
+#ifdef LINUX
         sprintf(file_name, "%llX", descriptor->hash);
-		addItem(io::path(file_name), descriptor->starting_position, descriptor->uncompressed_size, false, index++ );
+#endif
+
+#ifdef WINDOWS
+        sprintf(file_name, "%I64X", descriptor->hash);
+#endif
+
+        if(descriptor->hash == 0x06d7aaa148ac39be) {
+          printf("FOUND1\n");
+        }
+
+        if(descriptor->hash == 0x17abacc700026a8f) {
+          printf("FOUND2\n");
+        }
+        addItem(io::path(file_name), descriptor->starting_position, descriptor->uncompressed_size, false, index++ );
     }
 }
 
@@ -144,18 +160,26 @@ const io::IFileList* MYPReader::getFileList() const
 io::IReadFile* MYPReader::createAndOpenFile(const io::path& filename)
 {
 
-    unsigned int ph = 0;
-    unsigned int sh = 0;
-    hashlittle2(filename.c_str(), filename.size(), &sh, &ph); 
-    unsigned long long result  = ((unsigned long long)ph << 32) + sh;
-    c8 file_name[17];
-    sprintf(file_name, "%llX", result);
-	s32 index = findFile(file_name, false);
+  unsigned int ph = 0;
+  unsigned int sh = 0;
+  hashlittle2(filename.c_str(), filename.size(), &sh, &ph); 
+  unsigned long long result  = ((unsigned long long)ph << 32) + sh;
+  c8 file_name[17];
 
-	if (index != -1)
-		return createAndOpenFile(index);
+#ifdef LINUX
+        sprintf(file_name, "%llX", result);
+#endif
 
-	return 0;
+#ifdef WINDOWS 
+  sprintf(file_name, "%I64X", result);
+#endif
+
+  s32 index = findFile(file_name, false);
+
+  if (index != -1) {
+    return createAndOpenFile(index);
+  }
+  return 0;
 }
 
 

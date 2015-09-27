@@ -235,8 +235,8 @@ namespace scene
 		return true;
 	}
 
-  bool load2WayHeightMap(io::IReadFile* baseFile, io::IReadFile* offsetFile,
-			video::SColor vertexColor = video::SColor ( 255, 255, 255, 255 ), s32 smoothFactor = 0 );
+  bool CTerrainSceneNode::load2WayHeightMap(io::IReadFile* baseFile, io::IReadFile* offsetFile,
+			video::SColor vertexColor, s32 smoothFactor )
   {
     return false;
   }

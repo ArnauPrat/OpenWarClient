@@ -114,7 +114,8 @@ namespace owc {
 
     logger_->log("Loading terrain", irr::ELL_INFORMATION);
     scene::ITerrainSceneNode* terrain = smgr_->addTerrainSceneNode(
-        "zones/zone031/offset.pcx",
+        //"zones/zone031/offset.pcx",
+        "zones/zones.dat",
         0,                  
         -1,                 
         core::vector3df(0.0f, 0.f, 0.f),     // position

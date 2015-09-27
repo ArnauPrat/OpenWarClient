@@ -164,7 +164,7 @@ namespace scene
 		\param vertexColor Color of all vertices.
 		\param smoothFactor Number of smoothing passes. */
 		virtual bool load2WayHeightMap(io::IReadFile* baseFile, io::IReadFile* offsetFile,
-			video::SColor vertexColor = video::SColor ( 255, 255, 255, 255 ), s32 smoothFactor = 0 );
+			video::SColor vertexColor = video::SColor ( 255, 255, 255, 255 ), s32 smoothFactor = 0 ) = 0;
 
 		//! Initializes the terrain data.  Loads the vertices from the heightMapFile.
 		/** The data is interpreted as (signed) integers of the given bit size or
