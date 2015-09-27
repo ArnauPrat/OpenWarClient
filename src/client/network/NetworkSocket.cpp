@@ -1,7 +1,7 @@
 
 
 #ifdef LINUX
-#include "NetworkSocket.h"
+/*#include "NetworkSocket.h"
 #include "network_error_codes.h"
 #include "string.h"
 
@@ -61,4 +61,5 @@ namespace owc {
 
 }
 
+*/
 #endif

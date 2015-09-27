@@ -3,7 +3,7 @@
 #define OWC_NETWORK_CLIENT_H
 
 #ifdef LINUX
-#include "core/macros.h"
+/*#include "core/macros.h"
 #include <asio.hpp>
 
 #define OWC_IP_STRING_LENGTH 16
@@ -43,6 +43,7 @@ namespace owc {
   typedef NetworkSocket<udp> UDPSocket;
 
 }
+*/
 #endif
 
 
