@@ -156,6 +156,16 @@ namespace scene
 			video::SColor vertexColor=video::SColor(255,255,255,255),
 			s32 smoothFactor=0) =0;
 
+		//! Initializes the terrain data.  Loads the vertices from two heightMapFiles representing a base and an offset.
+		/** The files must contain a loadable image of the heightmap. The heightmaps
+		must be square.
+		\param baseFile The file to read the base image from. File is not rewinded.
+		\param offsetFile The file to read the offset image from. File is not rewinded.
+		\param vertexColor Color of all vertices.
+		\param smoothFactor Number of smoothing passes. */
+		virtual bool load2WayHeightMap(io::IReadFile* baseFile, io::IReadFile* offsetFile,
+			video::SColor vertexColor = video::SColor ( 255, 255, 255, 255 ), s32 smoothFactor = 0 );
+
 		//! Initializes the terrain data.  Loads the vertices from the heightMapFile.
 		/** The data is interpreted as (signed) integers of the given bit size or
 		floats (with 32bits, signed). Allowed bitsizes for integers are

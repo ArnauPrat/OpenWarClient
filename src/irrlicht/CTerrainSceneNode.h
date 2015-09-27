@@ -54,6 +54,10 @@ namespace scene
 		virtual bool loadHeightMap(io::IReadFile* file,
 			video::SColor vertexColor = video::SColor ( 255, 255, 255, 255 ), s32 smoothFactor = 0 );
 
+    //! Initializes the terrain data. Loads the vertices from two heightMapFiles representing a base and an offset.
+		virtual bool load2WayHeightMap(io::IReadFile* baseFile, io::IReadFile* offsetFile,
+			video::SColor vertexColor = video::SColor ( 255, 255, 255, 255 ), s32 smoothFactor = 0 );
+
 		//! Initializes the terrain data.  Loads the vertices from the heightMapFile.
 		virtual bool loadHeightMapRAW(io::IReadFile* file, s32 bitsPerPixel = 16,
 			bool signedData=true, bool floatVals=false, s32 width=0, video::SColor vertexColor = video::SColor ( 255, 255, 255, 255 ), s32 smoothFactor = 0 );

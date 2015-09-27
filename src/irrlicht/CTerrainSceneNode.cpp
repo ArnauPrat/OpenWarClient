@@ -235,6 +235,12 @@ namespace scene
 		return true;
 	}
 
+  bool load2WayHeightMap(io::IReadFile* baseFile, io::IReadFile* offsetFile,
+			video::SColor vertexColor = video::SColor ( 255, 255, 255, 255 ), s32 smoothFactor = 0 );
+  {
+    return false;
+  }
+
 
 	//! Initializes the terrain data. Loads the vertices from the heightMapFile
 	bool CTerrainSceneNode::loadHeightMapRAW(io::IReadFile* file,
