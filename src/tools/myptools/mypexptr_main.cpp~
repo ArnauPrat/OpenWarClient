@@ -89,9 +89,8 @@ int main(int argc, const char** argv) {
           i++;
           while( i < argc && !is_option(argv[i]) ) {
             printf("Loading archive %s \n", argv[i]);
-            int err = myp_file.load_archive(argv[i]);
-            if(err) {
-              printf("ERROR LOADING ARCHIVE %s %d\n",argv[i], err);
+            if(myp_file.load_archive(argv[i])) {
+              printf("ERROR LOADING ARCHIVE %s\n",argv[i]);
             }
             i++;
           }

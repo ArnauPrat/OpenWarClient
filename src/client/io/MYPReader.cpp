@@ -130,11 +130,11 @@ void MYPReader::load_files() {
         const MYPFileDescriptor* descriptor = &((*descriptors)[i]);
         c8 file_name[17];
 
-#ifdef LINUX
+#ifdef _LINUX
         sprintf(file_name, "%llX", descriptor->hash);
 #endif
 
-#ifdef WINDOWS
+#ifdef _WINDOWS
         sprintf(file_name, "%I64X", descriptor->hash);
 #endif
 
