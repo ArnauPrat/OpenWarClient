@@ -23,9 +23,6 @@ SET( OPENWARCLIENT_SOURCE_FILES ./main.cpp
                                 ./login_sequence.cpp
                                 ./core/marshalling.cpp
                                 ./io/Properties.cpp
-                                ./io/MYPFileDatabase.cpp
-                                ./io/MYPReader.cpp
-                                ./io/hash.cpp
                                 ./network/NetworkSocket.cpp
   )
 

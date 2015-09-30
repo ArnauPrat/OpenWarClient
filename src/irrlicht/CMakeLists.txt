@@ -1,7 +1,8 @@
 CMAKE_MINIMUM_REQUIRED( VERSION 2.8.3 )
 PROJECT( irrlicht )
 
-  SET(CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAG} -DNO_IRR_USE_NON_SYSTEM_ZLIB_ -fno-rtti -Wall -Wno-unused-variable -pipe -fno-exceptions -fstrict-aliasing")	
+SET(CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAG} -DNO_IRR_USE_NON_SYSTEM_ZLIB_ -fno-rtti -Wall -Wno-unused-variable \
+-Wno-unused-function -Wno-switch -Wno-deprecated-declarations -pipe -fno-exceptions -fstrict-aliasing")	
   #  SET(CMAKE_C_FLAGS ${CMAKE_C_FLAGS} " -O3 -fexpensive-optimizations -DPNG_THREAD_UNSAFE_OK -DPNG_NO_MMX_CODE -DPNG_NO_MNG_FEATURES")
   SET(CMAKE_CXX_FLAGS_DEBUG "${CMAKE_CXX_FLAGS_DEBUG} -g -D_DEBUG")	
   SET(CMAKE_CXX_FLAGS_RELEASE "${CMAKE_CXX_FLAGS_RELEASE}  -fexpensive-optimizations -O3")
@@ -243,6 +244,9 @@ SET( IRRIOOBJ ./CFileList.cpp
   ./CWADReader.cpp
   ./CZipReader.cpp
   ./CPakReader.cpp
+  ./CMYPReader.cpp
+  ./MYPHash.cpp
+  ./CMYPFileDatabase.cpp
   ./CNPKReader.cpp
   ./CTarReader.cpp
   ./CMountPointReader.cpp

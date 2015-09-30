@@ -15,7 +15,7 @@ Properties::Properties() {
 Properties::~Properties() {
 }
 
-int Properties::load(const char* file_name) {
+u32 Properties::load(const char* file_name) {
 
   std::ifstream input_file;
   input_file.open(file_name);

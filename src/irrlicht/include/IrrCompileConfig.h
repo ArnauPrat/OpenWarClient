@@ -646,6 +646,11 @@ currently only supports zip archives, though. */
 #ifdef NO__IRR_COMPILE_WITH_PAK_ARCHIVE_LOADER_
 #undef __IRR_COMPILE_WITH_PAK_ARCHIVE_LOADER_
 #endif
+//! Define __IRR_COMPILE_WITH_MYP_ARCHIVE_LOADER_ if you want to open ID software PAK archives
+#define __IRR_COMPILE_WITH_MYP_ARCHIVE_LOADER_
+#ifdef NO__IRR_COMPILE_WITH_MYP_ARCHIVE_LOADER_
+#undef __IRR_COMPILE_WITH_MYP_ARCHIVE_LOADER_
+#endif
 //! Define __IRR_COMPILE_WITH_NPK_ARCHIVE_LOADER_ if you want to open Nebula Device NPK archives
 #define __IRR_COMPILE_WITH_NPK_ARCHIVE_LOADER_
 #ifdef NO__IRR_COMPILE_WITH_NPK_ARCHIVE_LOADER_

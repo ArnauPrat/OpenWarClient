@@ -3,10 +3,11 @@
 #ifndef OWCLIENT_H
 #define OWCLIENT_H
 
-#include "core/macros.h"
-#include "io/MYPReader.h"
+#include <irrTypes.h>
+#include <irrMacros.h>
 #include "io/Properties.h"
 #include <irrlicht.h>
+#include <CMYPReader.h>
 #include <string>
 
 using namespace irr;
@@ -14,8 +15,8 @@ using namespace irr;
 namespace owc {
 
   class OWClient {
-    OWC_NON_INSTANTIABLE(OWClient);
-    OWC_NON_COPYABLE(OWClient);
+    IRR_NON_INSTANTIABLE(OWClient);
+    IRR_NON_COPYABLE(OWClient);
 
     public:
     enum Status {
@@ -25,9 +26,9 @@ namespace owc {
 
     public:
 
-    static int init( const c8* config_file_name );
-    static int free();
-    static int run();
+    static u32 init( const c8* config_file_name );
+    static u32 free();
+    static u32 run();
 
     private:
 
@@ -45,7 +46,7 @@ namespace owc {
     
     static Properties*            properties_;
 
-    static MYPArchiveLoader*      myp_archive_loader_;
+    static io::CMYPArchiveLoader*     myp_archive_loader_;
 
 
   };

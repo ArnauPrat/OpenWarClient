@@ -3,9 +3,9 @@
 // For conditions of distribution and use, see copyright notice in irrlicht.h
 // Code contributed by skreamz
 
-#include "MYPReader.h"
+#include "CMYPReader.h"
 #include "CFileSystem.h"
-#include "hash.h"
+#include "MYPHash.h"
 #include <inttypes.h>
 
 
@@ -13,10 +13,10 @@
 #include "coreutil.h"
 #include <string.h>
 
-using namespace irr;
 
-namespace owc 
+namespace irr 
 {
+  namespace io {
 
     namespace {
 
@@ -27,23 +27,23 @@ namespace owc
     }
 
 //! Constructor
-MYPArchiveLoader::MYPArchiveLoader( io::IFileSystem* fs)
+CMYPArchiveLoader::CMYPArchiveLoader( io::IFileSystem* fs)
 : FileSystem(fs)
 {
 #ifdef _DEBUG
-	setDebugName("MYPArchiveLoader");
+	setDebugName("CMYPArchiveLoader");
 #endif
 }
 
 
 //! returns true if the file maybe is able to be loaded by this class
-bool MYPArchiveLoader::isALoadableFileFormat(const io::path& filename) const
+bool CMYPArchiveLoader::isALoadableFileFormat(const io::path& filename) const
 {
 	return core::hasFileExtension(filename, "myp");
 }
 
 //! Check to see if the loader can create archives of this type.
-bool MYPArchiveLoader::isALoadableFileFormat( io::E_FILE_ARCHIVE_TYPE fileType) const
+bool CMYPArchiveLoader::isALoadableFileFormat( io::E_FILE_ARCHIVE_TYPE fileType) const
 {
 	return fileType == io::EFAT_MYP;
 }
@@ -51,7 +51,7 @@ bool MYPArchiveLoader::isALoadableFileFormat( io::E_FILE_ARCHIVE_TYPE fileType) 
 //! Creates an archive from the filename
 /** \param file File handle to check.
 \return Pointer to newly created archive, or 0 upon error. */
-io::IFileArchive* MYPArchiveLoader::createArchive(const io::path& filename, bool ignoreCase, bool ignorePaths) const
+io::IFileArchive* CMYPArchiveLoader::createArchive(const io::path& filename, bool ignoreCase, bool ignorePaths) const
 {
     io::IFileArchive *archive = 0;
 	io::IReadFile* file = FileSystem->createAndOpenFile(filename);
@@ -67,13 +67,13 @@ io::IFileArchive* MYPArchiveLoader::createArchive(const io::path& filename, bool
 
 //! creates/loads an archive from the file.
 //! \return Pointer to the created archive. Returns 0 if loading failed.
-io::IFileArchive* MYPArchiveLoader::createArchive(io::IReadFile* file, bool ignoreCase, bool ignorePaths) const
+io::IFileArchive* CMYPArchiveLoader::createArchive(io::IReadFile* file, bool ignoreCase, bool ignorePaths) const
 {
     io::IFileArchive *archive = 0;
 	if ( file )
 	{
 		file->seek ( 0 );
-		archive = new MYPReader(file, ignoreCase, ignorePaths);
+		archive = new CMYPReader(file, ignoreCase, ignorePaths);
 	}
 	return archive;
 }
@@ -83,7 +83,7 @@ io::IFileArchive* MYPArchiveLoader::createArchive(io::IReadFile* file, bool igno
 /** Check might look into the file.
 \param file File handle to check.
 \return True if file seems to be loadable. */
-bool MYPArchiveLoader::isALoadableFileFormat(io::IReadFile* file) const
+bool CMYPArchiveLoader::isALoadableFileFormat(io::IReadFile* file) const
 {
 	char header[4];
 
@@ -97,12 +97,12 @@ bool MYPArchiveLoader::isALoadableFileFormat(io::IReadFile* file) const
 /*!
 	MYP Reader
 */
-MYPReader::MYPReader( io::IReadFile* file, bool ignoreCase, bool ignorePaths) :
+CMYPReader::CMYPReader( io::IReadFile* file, bool ignoreCase, bool ignorePaths) :
  io::CFileList((file ? file->getFileName() : io::path("")), ignoreCase, ignorePaths), 
  File(file)
 {
 #ifdef _DEBUG
-	setDebugName("MYPReader");
+	setDebugName("CMYPReader");
 #endif
 
 	if (File)
@@ -115,49 +115,42 @@ MYPReader::MYPReader( io::IReadFile* file, bool ignoreCase, bool ignorePaths) :
 }
 
 
-MYPReader::~MYPReader()
+CMYPReader::~CMYPReader()
 {
 	if (File)
 		File->drop();
 }
 
-void MYPReader::load_files() {
+void CMYPReader::load_files() {
     myp_file_database.load_archive(File->getFileName().c_str());
-    const std::vector<MYPFileDescriptor>* descriptors = myp_file_database.get_descriptors(); 
+    const core::array<SMYPFileDescriptor>* descriptors = myp_file_database.get_descriptors(); 
     u32 index = 0;
     size_t size = descriptors->size();
     for( size_t i = 0; i < size; ++i ) {
-        const MYPFileDescriptor* descriptor = &((*descriptors)[i]);
+        const SMYPFileDescriptor* descriptor = &((*descriptors)[i]);
         c8 file_name[17];
 
-#ifdef _LINUX
-        sprintf(file_name, "%llX", descriptor->hash);
+#ifdef _IRR_LINUX_PLATFORM_
+        sprintf(file_name, "%lX", descriptor->hash);
 #endif
 
-#ifdef _WINDOWS
+#ifdef _IRR_WINDOWS_
         sprintf(file_name, "%I64X", descriptor->hash);
 #endif
 
-        if(descriptor->hash == 0x06d7aaa148ac39be) {
-          printf("FOUND1\n");
-        }
-
-        if(descriptor->hash == 0x17abacc700026a8f) {
-          printf("FOUND2\n");
-        }
         addItem(io::path(file_name), descriptor->starting_position, descriptor->uncompressed_size, false, index++ );
     }
 }
 
 
-const io::IFileList* MYPReader::getFileList() const
+const io::IFileList* CMYPReader::getFileList() const
 {
 	return this;
 }
 
 
 //! opens a file by file name
-io::IReadFile* MYPReader::createAndOpenFile(const io::path& filename)
+io::IReadFile* CMYPReader::createAndOpenFile(const io::path& filename)
 {
 
   unsigned int ph = 0;
@@ -166,11 +159,11 @@ io::IReadFile* MYPReader::createAndOpenFile(const io::path& filename)
   unsigned long long result  = ((unsigned long long)ph << 32) + sh;
   c8 file_name[17];
 
-#ifdef LINUX
+#ifdef _IRR_LINUX_PLATFORM_
         sprintf(file_name, "%llX", result);
 #endif
 
-#ifdef WINDOWS 
+#ifdef _IRR_WINDOWS_
   sprintf(file_name, "%I64X", result);
 #endif
 
@@ -184,14 +177,14 @@ io::IReadFile* MYPReader::createAndOpenFile(const io::path& filename)
 
 
 //! opens a file by index
-io::IReadFile* MYPReader::createAndOpenFile(u32 index)
+io::IReadFile* CMYPReader::createAndOpenFile(u32 index)
 {
 	if (index >= Files.size() )
 		return 0;
 
 	const io::SFileListEntry &entry = Files[index];
     // Get additional information regarding MYP files.
-    MYPFileDescriptor desc = myp_file_database.get_file_descriptor(entry.ID);
+    SMYPFileDescriptor desc = myp_file_database.get_file_descriptor(entry.ID);
     if( desc.compression_method ) {
         unsigned char* data;
         size_t data_size;
@@ -201,6 +194,7 @@ io::IReadFile* MYPReader::createAndOpenFile(u32 index)
         return io::createLimitReadFile( entry.FullName, File, entry.Offset, entry.Size );
     }
 }
+} // end namespace io 
 
-} // end namespace owc 
+} // end namespace irr 
 
