@@ -4,7 +4,8 @@
 
 #include <string.h>
 
-namespace owc {
+namespace irr {
+  namespace io {
 
 void hashlittle2( 
     const void *key,       /* the key to hash */
@@ -101,6 +102,7 @@ void hashlittle2(
 
 */
 
+}
 
 }
 #endif

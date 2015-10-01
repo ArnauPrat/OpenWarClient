@@ -1,9 +1,10 @@
 
 
-#include "hash.h"
+#include "MYPHash.h"
 
 
-namespace owc {
+namespace irr {
+  namespace io {
 #define hashsize(n) ((unsigned int)1<<(n))
 #define hashmask(n) (hashsize(n)-1)
 #define rot(x,k) (((x)<<(k)) | ((x)>>(32-(k))))
@@ -73,6 +74,7 @@ void hashlittle2(
   }
   final(a,b,c);
   *pc=c; *pb=b;
+}
 }
 
 }

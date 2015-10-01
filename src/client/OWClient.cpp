@@ -21,11 +21,11 @@ namespace owc {
 
   Properties*             OWClient::properties_ = NULL;
 
-  MYPArchiveLoader*       OWClient::myp_archive_loader_ = NULL;
+  io::CMYPArchiveLoader*  OWClient::myp_archive_loader_ = NULL;
 
 
 
-  int OWClient::init( const c8* config_file_name ) {
+  u32 OWClient::init( const c8* config_file_name ) {
 
     /** Starting logging system */
     properties_ = new Properties();
@@ -58,7 +58,7 @@ namespace owc {
 
     /** Adding resource files and directories **/
     std::string data_dir = properties.get("data_dir");
-    myp_archive_loader_ = new MYPArchiveLoader( fsystem_ );
+    myp_archive_loader_ = new io::CMYPArchiveLoader( fsystem_ );
     fsystem_->addArchiveLoader( myp_archive_loader_ ); 
 
     logger_->log("Loading art.myp", irr::ELL_INFORMATION);
@@ -130,7 +130,7 @@ namespace owc {
     return 0;
   }
 
-  int OWClient::free() {
+  u32 OWClient::free() {
 
     device_->drop();
     delete myp_archive_loader_;
@@ -138,7 +138,7 @@ namespace owc {
     return 0;
   }
 
-  int OWClient::run() {
+  u32 OWClient::run() {
 
 /*    std::thread t([ properties ] () mutable {
         char* token;

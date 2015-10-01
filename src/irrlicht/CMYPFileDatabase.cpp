@@ -1,22 +1,26 @@
 
+#include <CMYPFileDatabase.h>
+#ifdef __IRR_COMPILE_WITH_MYP_ARCHIVE_LOADER_
+
 #include <stdio.h>
 #include <stdlib.h>
 #include <string.h>
 #include <stdlib.h>
 #include <stdio.h>
-#include "MYPFileDatabase.h"
-#include "hash.h"
+#include "CMYPFileDatabase.h"
+#include "MYPHash.h"
 
 #include <zlib.h>
 
 #include <sys/types.h>
 #include <sys/stat.h>
 
-#ifdef _WINDOWS
+#ifdef _IRR_WINDOWS_
 #include <windows.h>
 #endif 
 
-namespace owc {
+namespace irr {
+  namespace io {
 
 #define MYP_FILE_DESCRIPTOR_SIZE 34
 #define MYP_TABLE_BLOCK_HEADER_SIZE 12
@@ -29,7 +33,7 @@ namespace owc {
 
 #define MYP_NUM_PREFIXES 4
 
-  static const char* name_prefixes[MYP_NUM_PREFIXES] = {"sk.0.0.", "it.0.0.", "fi.0.0.", "fg.0.0." };
+  static const c8* name_prefixes[MYP_NUM_PREFIXES] = {"sk.0.0.", "it.0.0.", "fi.0.0.", "fg.0.0." };
 
 
   /*
@@ -38,8 +42,8 @@ namespace owc {
 
   struct TableBlockHeader {
 
-    unsigned int        num_files;
-    unsigned long long  next_block;
+    u32        num_files;
+    u64  next_block;
 
   };
 
@@ -48,37 +52,37 @@ namespace owc {
    * Static function definitions
    */
 
-  static unsigned int parse_uint( const unsigned char* buffer, long offset ) {
+  static u32 parse_uint( const u8* buffer, u64 offset ) {
 
-    unsigned int result;
-    memcpy(&result,buffer+offset,sizeof(unsigned int));
+    u32 result;
+    memcpy(&result,buffer+offset,sizeof(u32));
     return result;
 
   }
 
-  static unsigned long long parse_ulong( const unsigned char* buffer, long offset ) {
+  static u64 parse_ulong( const u8* buffer, u64 offset ) {
 
-    unsigned long long result;
-    memcpy(&result,buffer+offset,sizeof(unsigned long long));
+    u64 result;
+    memcpy(&result,buffer+offset,sizeof(u64));
     return result;
 
   }
 
 
-  static void initialize_FileDescriptor(MYPFileDescriptor* descriptor, const unsigned char* buffer, unsigned int offset) {
+  static void initialize_FileDescriptor(SMYPFileDescriptor* descriptor, const u8* buffer, u32 offset) {
 
     descriptor->starting_position   = parse_ulong(buffer, offset + 0);            
     descriptor->header_size         = parse_uint(buffer, offset + 8);
     descriptor->compressed_size     = parse_uint(buffer, offset + 12);
     descriptor->uncompressed_size   = parse_uint(buffer, offset + 16);
-    unsigned int secondary_hash      = parse_uint(buffer, offset + 20);
-    unsigned long long primary_hash        = parse_uint(buffer, offset + 24);
+    u32 secondary_hash      = parse_uint(buffer, offset + 20);
+    u64 primary_hash        = parse_uint(buffer, offset + 24);
     descriptor->hash = (primary_hash << 32) + secondary_hash;
     descriptor->compression_method  = buffer[offset + 32];
 
   }
 
-  static void initialize_TableBlockHeader( TableBlockHeader* block_header, const unsigned char* buffer ) {
+  static void initialize_TableBlockHeader( TableBlockHeader* block_header, const u8* buffer ) {
 
     block_header->num_files  = parse_uint(buffer,0);
     block_header->next_block = parse_ulong(buffer,4);
@@ -88,59 +92,57 @@ namespace owc {
    * Class methods
    */
 
-  MYPFileDatabase::MYPFileDatabase() 
+  CMYPFileDatabase::CMYPFileDatabase() 
   {
   }
 
-  MYPFileDatabase::~MYPFileDatabase() {
-    int size = archive_names_.size();
-    for( int i = 0; i < size; ++i ) {
+  CMYPFileDatabase::~CMYPFileDatabase() {
+    u32 size = archive_names_.size();
+    for( u32 i = 0; i < size; ++i ) {
       free(archive_names_[i]);
       fclose(archive_files_[i]);
     }
   }
 
-  int MYPFileDatabase::load_archive( const char* file_name) {
+  u32 CMYPFileDatabase::load_archive( const c8* file_name) {
 
-    char* archive_file_name = (char*)malloc(sizeof(char)*(strlen(file_name)+1));
+    c8* archive_file_name = (c8*)malloc(sizeof(c8)*(strlen(file_name)+1));
     strcpy(archive_file_name, file_name);
-    int archive_index = archive_names_.size(); 
+    u32 archive_index = archive_names_.size(); 
     archive_names_.push_back(archive_file_name);
-    int file_descriptors_index = file_descriptors_.size(); 
+    u32 file_descriptors_index = file_descriptors_.size(); 
 
-    unsigned char buffer[4];
-    unsigned int num_total_files;
-    unsigned int num_read_files;
-    unsigned long long next_table_block_header;
+    u8 buffer[4];
+    u32 num_total_files;
+    u32 num_read_files;
+    u64 next_table_block_header;
 
 
     /* Buffer to store myp archive header  */
-    unsigned char archive_header_buffer[MYP_ARCHIVE_HEADER_SIZE];
+    u8 archive_header_buffer[MYP_ARCHIVE_HEADER_SIZE];
 
     /* Buffer to store myp table block header  */
-    unsigned char myp_table_block_header_buffer[MYP_TABLE_BLOCK_HEADER_SIZE];
+    u8 myp_table_block_header_buffer[MYP_TABLE_BLOCK_HEADER_SIZE];
 
     /* Create buffers to store file descriptors. Initial size to 1000 as it is typically observed in practice.  */
-    unsigned int myp_file_descriptor_buffer_size = MYP_EXPECTED_NUM_FILES_PER_BLOCK * MYP_FILE_DESCRIPTOR_SIZE;
-    unsigned char* myp_file_descriptor_buffer = (unsigned char*)malloc(sizeof(unsigned char)*myp_file_descriptor_buffer_size);
+    u32 myp_file_descriptor_buffer_size = MYP_EXPECTED_NUM_FILES_PER_BLOCK * MYP_FILE_DESCRIPTOR_SIZE;
+    u8* myp_file_descriptor_buffer = (u8*)malloc(sizeof(u8)*myp_file_descriptor_buffer_size);
 
     /* Create buffers to store file descriptors. Initial size to 1000 as it is typically observed in practice.  */
-    MYPFileDescriptor aux_file_descriptor;
+    SMYPFileDescriptor aux_file_descriptor;
 
-    int error_code = 0;
+    u32 error_code = 0;
     FILE* fp = fopen(archive_file_name, "rb");
     archive_files_.push_back(fp);
 
     /* Obtain the position of the first table block */ 
     if(fseek(fp,MYP_ARCHIVE_HEADER_START_POSITION,SEEK_SET)) {
-      printf("ARRIBA1\n");
       error_code = MYP_ERROR_EOF;
       goto error;
     }
 
     fread(archive_header_buffer, MYP_ARCHIVE_HEADER_SIZE, 1, fp);
     if( feof(fp) ) {
-      printf("ARRIBA2\n");
       error_code = MYP_ERROR_EOF;
       goto error; 
     }
@@ -149,14 +151,12 @@ namespace owc {
 
     /* Get total number of files in the archive */
     if(fseek(fp,MYP_ARCHIVE_HEADER_NUM_FILES_POSITION,SEEK_SET)) {
-      printf("ARRIBA3\n");
       error_code = MYP_ERROR_EOF;
       goto error;
     }
 
     fread(buffer,4,1,fp);
     if( feof(fp) ) {
-      printf("ARRIBA4\n");
       error_code = MYP_ERROR_EOF;
       goto error;
     }
@@ -167,20 +167,19 @@ namespace owc {
     while( next_table_block_header != 0 ) {
 
       /* We read the next table block header */
-#ifdef _LINUX
+#ifdef _IRR_LINUX_PLATFORM_
       if(fseek(fp,next_table_block_header,SEEK_SET)) {
 #endif
-#ifdef _WINDOWS
+
+#ifdef _IRR_WINDOWS_
       if(fseek64(fp,next_table_block_header,SEEK_SET)) {
 #endif
-        printf("ARRIBA5 %I64u\n", next_table_block_header);
         error_code = MYP_ERROR_EOF;
         goto error;
       }
 
-      int bytes_read = fread(myp_table_block_header_buffer, MYP_TABLE_BLOCK_HEADER_SIZE, 1, fp);
+      u32 bytes_read = fread(myp_table_block_header_buffer, MYP_TABLE_BLOCK_HEADER_SIZE, 1, fp);
       if( feof(fp) && bytes_read != MYP_TABLE_BLOCK_HEADER_SIZE ) {
-        printf("ARRIBA6\n");
         error_code = MYP_ERROR_EOF;
         goto error;
       }
@@ -192,17 +191,16 @@ namespace owc {
       if( table_block_header.num_files*MYP_FILE_DESCRIPTOR_SIZE > myp_file_descriptor_buffer_size ) { // resizing buffer if needed
         free(myp_file_descriptor_buffer);
         myp_file_descriptor_buffer_size = table_block_header.num_files*MYP_FILE_DESCRIPTOR_SIZE;
-        myp_file_descriptor_buffer = (unsigned char*)malloc(myp_file_descriptor_buffer_size);
+        myp_file_descriptor_buffer = (u8*)malloc(myp_file_descriptor_buffer_size);
       }
 
       if( fread(myp_file_descriptor_buffer, MYP_FILE_DESCRIPTOR_SIZE, table_block_header.num_files, fp) !=
           table_block_header.num_files ) {
-        printf("ARRIBA7\n");
         error_code = MYP_ERROR_EOF;
         goto error;
       }
 
-      for ( unsigned int i = 0; i < table_block_header.num_files; ++i) {
+      for ( u32 i = 0; i < table_block_header.num_files; ++i) {
         initialize_FileDescriptor(&aux_file_descriptor,myp_file_descriptor_buffer, i*MYP_FILE_DESCRIPTOR_SIZE);
         if( aux_file_descriptor.starting_position > 0 ) {
           aux_file_descriptor.archive_index = archive_index;
@@ -212,7 +210,6 @@ namespace owc {
       }
 
       next_table_block_header = table_block_header.next_block;
-
     }
 
     if ( num_total_files != num_read_files ){
@@ -223,29 +220,29 @@ namespace owc {
     return 0;
 error:
     /* We undo the adding of the whole archive */
-    archive_names_.pop_back();
-    archive_files_.pop_back();
-    file_descriptors_.erase(file_descriptors_.begin()+file_descriptors_index, file_descriptors_.end());
+    archive_names_.erase(archive_names_.size()-1);
+    archive_files_.erase(archive_names_.size()-1);
+    file_descriptors_.erase(file_descriptors_index, file_descriptors_.size() - file_descriptors_index );
     free(myp_file_descriptor_buffer);
     fclose(fp);
     return error_code;
   }
 
 
-  int MYPFileDatabase::load_hash_dictionary( const char* file_name ) {
+  /*u32 CMYPFileDatabase::load_hash_dictionary( const c8* file_name ) {
 
     FILE* fp = fopen(file_name, "r");
 
-    int line_buffer_size = LINE_BUFFER_BLOCK_SIZE;
-    char* line_buffer = (char*)malloc(sizeof(char)*LINE_BUFFER_BLOCK_SIZE);
+    u32 line_buffer_size = LINE_BUFFER_BLOCK_SIZE;
+    c8* line_buffer = (c8*)malloc(sizeof(c8)*LINE_BUFFER_BLOCK_SIZE);
 
     while( (line_buffer = fgets(line_buffer, line_buffer_size, fp)) ) {
-      int line_size = strlen(line_buffer);
+      u32 line_size = strlen(line_buffer);
       while( line_size == (line_buffer_size-1) &&
           line_buffer[line_buffer_size - 2] != '\n' && 
           !feof(fp) ) { //resizing the buffer and filling with more data in case we do not found an eof
         line_buffer_size += LINE_BUFFER_BLOCK_SIZE;
-        line_buffer = (char*) realloc(line_buffer, line_buffer_size );
+        line_buffer = (c8*) realloc(line_buffer, line_buffer_size );
         fgets(&line_buffer[line_buffer_size - LINE_BUFFER_BLOCK_SIZE - 1], LINE_BUFFER_BLOCK_SIZE + 1, fp);  
         line_size = strlen(line_buffer);
       }
@@ -254,24 +251,24 @@ error:
     free(line_buffer);
     fclose(fp);
     return 0;
-  }
+  }*/
 
-  void MYPFileDatabase::add_hash_to_filename_entry( const char* line ) {
-    char* next_sharp; 
-    long long int ph = strtol(line,&next_sharp,16);
-    long long int sh = strtol(next_sharp+1,&next_sharp,16);
-    long long int full_hash = (ph << 32) + sh;
-    char* last_sharp = strchr(next_sharp+1,'#');
-    hash_to_file_names_.insert(std::pair<unsigned long long, std::string > ( full_hash,
-          std::string(next_sharp+1,last_sharp) ) );
-  }
+  /*void CMYPFileDatabase::add_hash_to_filename_entry( const c8* line ) {
+    c8* next_sharp; 
+    u64 ph = strtol(line,&next_sharp,16);
+    u64 sh = strtol(next_sharp+1,&next_sharp,16);
+    u64 full_hash = (ph << 32) + sh;
+    c8* last_sharp = strchr(next_sharp+1,'#');
+    hash_to_file_names_.insert(std::pair<u64, core::stringc > ( full_hash,
+          core::stringc(next_sharp+1,last_sharp) ) );
+  }*/
 
-  static void find_extension(const unsigned char* data, char* ext) {
+  static void find_extension(const u8* data, c8* ext) {
 
     sprintf(ext,"%s","txt"); 
 
-    char buff[4];
-    memcpy((unsigned char*)buff, data, sizeof(unsigned char)*4);
+    c8 buff[4];
+    memcpy((u8*)buff, data, sizeof(u8)*4);
 
     if (buff[0] == 0 && buff[1] == 1 && buff[2] == 0)
     {
@@ -293,7 +290,7 @@ error:
     {
       sprintf(ext,"%s","xml"); 
     }
-    else if ( strstr((char*)data, "lua") && ( strstr((char*)data, "lua") - (const char*)data) < 50)
+    else if ( strstr((c8*)data, "lua") && ( strstr((c8*)data, "lua") - (const c8*)data) < 50)
     {
       sprintf(ext,"%s","lua"); 
     }
@@ -341,18 +338,18 @@ error:
     {
       sprintf(ext,"%s","glow"); 
     }
-    else if (strstr((char*)data, "Gamebry") )
+    else if (strstr((c8*)data, "Gamebry") )
     {
       sprintf(ext,"%s","nif"); 
     }
-    else if (strstr((char*)data,"WMPHOTO") )
+    else if (strstr((c8*)data,"WMPHOTO") )
     {
       sprintf(ext,"%s","lmp"); 
     }
     else if (strstr(buff,"RIFF") )
     {
-      char buff2[4];
-      memcpy(buff2, &data[8], sizeof(unsigned char)*4);
+      c8 buff2[4];
+      memcpy(buff2, &data[8], sizeof(u8)*4);
       if (strstr(buff2,"WAVE") )
       {
         sprintf(ext,"%s","wav"); 
@@ -390,14 +387,14 @@ error:
 
   }
 
-  int MYPFileDatabase::extract( const char* path ) {
+  u32 CMYPFileDatabase::extract( const c8* path ) {
 
     if(archive_names_.size() > 0 ) {
-      int num_files = file_descriptors_.size();
-      for ( int i = 0; i < num_files; ++i ) {
+      u32 num_files = file_descriptors_.size();
+      for ( u32 i = 0; i < num_files; ++i ) {
 
-        MYPFileDescriptor* file_descriptor = &file_descriptors_[i];
-        int res = extract(file_descriptor, path);
+        SMYPFileDescriptor* file_descriptor = &file_descriptors_[i];
+        u32 res = extract(file_descriptor, path);
         if(res) return res;
 
       }
@@ -405,15 +402,15 @@ error:
     return 0;
   }
 
-  int MYPFileDatabase::extract( const char* file_name, const char* path ) {
+  u32 CMYPFileDatabase::extract( const c8* file_name, const c8* path ) {
 
-    unsigned int ph = 0;
-    unsigned int sh = 0;
+    u32 ph = 0;
+    u32 sh = 0;
     hashlittle2(file_name, strlen(file_name), &sh, &ph); 
-    unsigned long long hash  = ((unsigned long long)ph << 32) + sh;
-    size_t num_files = this->file_descriptors_.size();
-    for( size_t i = 0; i < num_files; ++i ) {
-      MYPFileDescriptor* descriptor = &file_descriptors_[i];
+    u64 hash  = ((u64)ph << 32) + sh;
+    u64 num_files = this->file_descriptors_.size();
+    for( u64 i = 0; i < num_files; ++i ) {
+      SMYPFileDescriptor* descriptor = &file_descriptors_[i];
       if ( descriptor->hash == hash ) {
         return extract(descriptor, path, file_name );
       }
@@ -421,40 +418,40 @@ error:
     return MYP_ERROR_FILE_NOT_FOUND;
   }
 
-  int MYPFileDatabase::extract( const MYPFileDescriptor* file_descriptor, const char* path, const char* output_file_name ) {
+  u32 CMYPFileDatabase::extract( const SMYPFileDescriptor* file_descriptor, const c8* path, const c8* output_file_name ) {
 
-    size_t file_name_buffer_size = sizeof(char)*1024;;
-    char* file_name = (char*)malloc(file_name_buffer_size);;
-    unsigned char* data;
-    size_t data_size;
+    u64 file_name_buffer_size = sizeof(c8)*1024;;
+    c8* file_name = (c8*)malloc(file_name_buffer_size);;
+    u8* data;
+    u64 data_size;
     get_file_data(file_descriptor,&data, &data_size );
 
     if( output_file_name == NULL ) {
-      std::map<unsigned long long, std::string>::iterator it = hash_to_file_names_.find( file_descriptor->hash );
-      if( it != hash_to_file_names_.end() ) { /* We have a name for this particular hash */
+      /*std::map<u64, core::stringc>::iterator it = hash_to_file_names_.find( file_descriptor->hash );
+      if( it != hash_to_file_names_.end() ) { // We have a name for this particular hash 
 
-        const char* str  = it->second.c_str();
-        int str_length = strlen(str);
+        const c8* str  = it->second.c_str();
+        u32 str_length = strlen(str);
 
-        if( str_length >= 1024 ) { /* we need a larger file name buffer */
+        if( str_length >= 1024 ) { // we need a larger file name buffer 
           file_name_buffer_size *= 1024;
-          file_name = (char*)realloc(file_name,file_name_buffer_size); 
+          file_name = (c8*)realloc(file_name,file_name_buffer_size); 
         }
-        strcpy((char*)file_name, str);
+        strcpy((c8*)file_name, str);
 
         if( str_length > 0 ) {
-          const char* actual_file_name_start = strrchr((char*)file_name, '/');
+          const c8* actual_file_name_start = strrchr((c8*)file_name, '/');
           if( actual_file_name_start != NULL ) {
             actual_file_name_start++;
           } else {
             actual_file_name_start = file_name;
           }
 
-          /* Check for file name prefixes for renaming the file. We do not want them */
-          int pre_length = 0;
-          int pre = 0;
-          for (int j = 0; j < MYP_NUM_PREFIXES; ++j ) {
-            int length = strlen(name_prefixes[j]);
+          // Check for file name prefixes for renaming the file. We do not want them 
+          u32 pre_length = 0;
+          u32 pre = 0;
+          for (u32 j = 0; j < MYP_NUM_PREFIXES; ++j ) {
+            u32 length = strlen(name_prefixes[j]);
             if( strncmp(actual_file_name_start, name_prefixes[j], length) == 0 ) {
               pre_length = length;
               pre = j;
@@ -463,9 +460,9 @@ error:
           }
 
           if ( pre < MYP_NUM_PREFIXES ) {
-            strcpy((char*)(actual_file_name_start),(char*)(str+(actual_file_name_start - file_name) + pre_length));
-            const char* last_dot_pos = strrchr(file_name, '.');
-            if( last_dot_pos && (strcmp((char*)(last_dot_pos+1), "stx") == 0)) {
+            strcpy((c8*)(actual_file_name_start),(c8*)(str+(actual_file_name_start - file_name) + pre_length));
+            const c8* last_dot_pos = strrchr(file_name, '.');
+            if( last_dot_pos && (strcmp((c8*)(last_dot_pos+1), "stx") == 0)) {
               file_name[str_length- 3 - pre_length] = 'd';
               file_name[str_length- 3 - pre_length + 1] = 'd';
               file_name[str_length- 3 - pre_length + 2] = 's';
@@ -474,54 +471,61 @@ error:
         }
 
       }
+      */
 
-      if( it == hash_to_file_names_.end()  || strlen(file_name) == 0 ) { /* We do not have a name for this hash. We infer the extension*/
+      /*if( it == hash_to_file_names_.end()  || strlen(file_name) == 0 )*/ { /* We do not have a name for this hash. We infer the extension*/
 
-        char ext[16];
+        c8 ext[16];
         find_extension(data,ext);
-        sprintf((char*)file_name,"%llX.%s", file_descriptor->hash, ext);
+#ifdef _IRR_LINUX_PLATFORM_
+        sprintf((c8*)file_name,"%lX.%s", file_descriptor->hash, ext);
+#endif
+
+#ifdef _IRR_WINDOWS_
+        sprintf((c8*)file_name,"%I64X.%s", file_descriptor->hash, ext);
+#endif
 
       }
     } else {
-      size_t output_file_name_length = strlen(output_file_name) + 1;
+      u64 output_file_name_length = strlen(output_file_name) + 1;
       if( output_file_name_length >= file_name_buffer_size ) {
         file_name_buffer_size = output_file_name_length;
-        file_name = (char*)realloc(file_name, file_name_buffer_size);
+        file_name = (c8*)realloc(file_name, file_name_buffer_size);
       }
       strcpy(file_name,output_file_name);
     }
 
-    char current_folder[3] = {'.','/', '\0'};
+    c8 current_folder[3] = {'.','/', '\0'};
     if( path == NULL || (strlen(path) == 0) ) {
       path = current_folder;
     }
 
-    int path_size = strlen(path);
-    int file_name_size = strlen(file_name);
-    int final_file_name_length = path_size+file_name_size;
-    char* final_file_name = (char*)malloc(sizeof(char*)*final_file_name_length+1);
+    u32 path_size = strlen(path);
+    u32 file_name_size = strlen(file_name);
+    u32 final_file_name_length = path_size+file_name_size;
+    c8* final_file_name = (c8*)malloc(sizeof(c8*)*final_file_name_length+1);
     sprintf(final_file_name, "%s/%s", path, file_name);
 
     /* Creating folders from path */
-    char* sub_path = (char*)malloc(sizeof(char)*final_file_name_length+1);
-#ifdef _LINUX
-    char SEPARATOR = '/';
+    c8* sub_path = (c8*)malloc(sizeof(c8)*final_file_name_length+1);
+#ifdef _IRR_LINUX_PLATFORM_
+    c8 SEPARATOR = '/';
 #endif
 
-#ifdef _WINDOWS 
-    char SEPARATOR = '\\';
+#ifdef _IRR_WINDOWS_
+    c8 SEPARATOR = '\\';
 #endif
-    char* next_token = strchr((char*)final_file_name,SEPARATOR);
+    c8* next_token = strchr((c8*)final_file_name,SEPARATOR);
     while(next_token) {
       next_token++;
-      int end = next_token - final_file_name;
+      u32 end = next_token - final_file_name;
       strncpy(sub_path, final_file_name, end );
       sub_path[end] = '\0';
-#ifdef _LINUX
-      mkdir((char*)sub_path, S_IRWXU);
+#ifdef _IRR_LINUX_PLATFORM_
+      mkdir((c8*)sub_path, S_IRWXU);
 #endif
-#ifdef _WINDOWS
-      CreateDirectory((char*)sub_path, NULL);
+#ifdef _IRR_WINDOWS_
+      CreateDirectory((c8*)sub_path, NULL);
 #endif
       next_token = strchr(next_token,SEPARATOR);
 
@@ -539,21 +543,21 @@ error:
     return 0;
   }
 
-  MYPFileDatabaseStats MYPFileDatabase::get_stats() const {
-    MYPFileDatabaseStats stats;
+  SMYPFileDatabaseStats CMYPFileDatabase::get_stats() const {
+    SMYPFileDatabaseStats stats;
     stats.num_files_ = file_descriptors_.size();
     return stats;
   }
 
-  int MYPFileDatabase::get_file_data(const char* file_name, unsigned char** data, size_t* data_size) {
+  u32 CMYPFileDatabase::get_file_data(const c8* file_name, u8** data, u64* data_size) {
     *data = NULL;
-    unsigned int ph = 0;
-    unsigned int sh = 0;
+    u32 ph = 0;
+    u32 sh = 0;
     hashlittle2(file_name, strlen(file_name), &sh, &ph); 
-    unsigned long long hash  = ((unsigned long long)ph << 32) + sh;
-    size_t num_files = this->file_descriptors_.size();
-    for( size_t i = 0; i < num_files; ++i ) {
-      MYPFileDescriptor* descriptor = &file_descriptors_[i];
+    u64 hash  = ((u64)ph << 32) + sh;
+    u64 num_files = this->file_descriptors_.size();
+    for( u64 i = 0; i < num_files; ++i ) {
+      SMYPFileDescriptor* descriptor = &file_descriptors_[i];
       if ( descriptor->hash == hash ) {
         return get_file_data(descriptor, data, data_size );
       }
@@ -561,16 +565,16 @@ error:
     return 1;
   }
 
-  int MYPFileDatabase::get_file_data(const MYPFileDescriptor* file_descriptor, unsigned char** data, size_t* data_size) {
+  u32 CMYPFileDatabase::get_file_data(const SMYPFileDescriptor* file_descriptor, u8** data, u64* data_size) {
 
     FILE* fp = archive_files_[file_descriptor->archive_index];
     *data_size = file_descriptor->uncompressed_size;
-    *data = (unsigned char*)malloc(sizeof(unsigned char)*file_descriptor->uncompressed_size);;
+    *data = (u8*)malloc(sizeof(u8)*file_descriptor->uncompressed_size);;
 
     if( file_descriptor->compression_method != 0 ) { /* It is compressed */
-      unsigned char* compressed_buffer = (unsigned char*)malloc(sizeof(unsigned char)*file_descriptor->compressed_size);
+      u8* compressed_buffer = (u8*)malloc(sizeof(u8)*file_descriptor->compressed_size);
       fseek(fp,file_descriptor->starting_position + file_descriptor->header_size, SEEK_SET);
-      fread(compressed_buffer, sizeof(unsigned char), file_descriptor->compressed_size, fp);
+      fread(compressed_buffer, sizeof(u8), file_descriptor->compressed_size, fp);
       z_stream zstr;
       zstr.next_in = compressed_buffer;
       zstr.avail_in = file_descriptor->compressed_size;
@@ -580,7 +584,7 @@ error:
       zstr.zfree = Z_NULL;
       zstr.opaque = Z_NULL;
       if ( inflateInit(&zstr) != Z_OK ) fprintf(stderr, "Error when initializing zlib\n");
-      int ret = inflate(&zstr,Z_FINISH) ; 
+      u32 ret = inflate(&zstr,Z_FINISH) ; 
       if ( ret != Z_OK && ret != Z_STREAM_END ) {
         fprintf(stderr, "Error when inflating compressed buffer: %d\n", ret);
       }
@@ -588,13 +592,15 @@ error:
       free(compressed_buffer);
     } else {
       fseek(fp,file_descriptor->starting_position + file_descriptor->header_size, SEEK_SET);
-      fread(*data, sizeof(unsigned char), file_descriptor->uncompressed_size, fp);
+      fread(*data, sizeof(u8), file_descriptor->uncompressed_size, fp);
     }
     return 0;
   }
 
-  int MYPFileDatabase::free_file_data( unsigned char* data) {
+  u32 CMYPFileDatabase::free_file_data( u8* data) {
     free(data);
     return 0;
   }
-}
+} //end namespace io 
+} //end namespace irr
+#endif

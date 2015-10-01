@@ -1,17 +1,17 @@
 
-#ifndef OWC_MACROS_HPP
-#define OWC_MACROS_HPP
+#ifndef __IRR_MACROS_H_INCLUDED__
+#define __IRR_MACROS_H_INCLUDED__
 
-#define OWC_NON_COPYABLE(className)\
+#define IRR_NON_COPYABLE(className)\
       private:\
         className( const className& c ); \
         className& operator= ( const className& c );
 
-#define OWC_NON_INSTANTIABLE(className)\
+#define IRR_NON_INSTANTIABLE(className)\
       private:\
         className();
 
-#define OWC_BASECLASS_NON_INSTANTIABLE(className)\
+#define IRR_BASECLASS_NON_INSTANTIABLE(className)\
       protected:\
         className();
 
