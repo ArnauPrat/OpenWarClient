@@ -86,10 +86,10 @@ namespace irr  {
 
       private:
 
-        void load_files();
+        void loadFiles();
 
         io::IReadFile* File;
-        CMYPFileDatabase myp_file_database;
+        CMYPFileDatabase MYPFileDatabase;
 
     };
   }

@@ -1,6 +1,6 @@
 
-#ifndef MYP_HASH_H
-#define MYP_HASH_H
+#ifndef __MYP_HASH_H_INCLUDED__
+#define __MYP_HASH_H_INCLUDED__
 
 #include <string.h>
 

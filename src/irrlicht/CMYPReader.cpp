@@ -99,7 +99,7 @@ bool CMYPArchiveLoader::isALoadableFileFormat(io::IReadFile* file) const
 */
 CMYPReader::CMYPReader( io::IReadFile* file, bool ignoreCase, bool ignorePaths) :
  io::CFileList((file ? file->getFileName() : io::path("")), ignoreCase, ignorePaths), 
- File(file)
+ File(file), MYPFileDatabase( file ) 
 {
 #ifdef _DEBUG
 	setDebugName("CMYPReader");
@@ -109,7 +109,7 @@ CMYPReader::CMYPReader( io::IReadFile* file, bool ignoreCase, bool ignorePaths) 
 	{
     /** grab File */
         File->grab();
-        load_files();
+        loadFiles();
         sort();
 	}
 }
@@ -121,25 +121,27 @@ CMYPReader::~CMYPReader()
 		File->drop();
 }
 
-void CMYPReader::load_files() {
-    myp_file_database.load_archive(File->getFileName().c_str());
-    const core::array<SMYPFileDescriptor>* descriptors = myp_file_database.get_descriptors(); 
-    u32 index = 0;
-    size_t size = descriptors->size();
-    for( size_t i = 0; i < size; ++i ) {
-        const SMYPFileDescriptor* descriptor = &((*descriptors)[i]);
-        c8 file_name[17];
+void CMYPReader::loadFiles() {
+  if(MYPFileDatabase.loadArchive()) {
+    printf("ERROR LOADING MYP ARCHIVE\n");
+  }
+  const core::array<SMYPFileDescriptor>* descriptors = MYPFileDatabase.getDescriptors(); 
+  u32 index = 0;
+  u64 size = descriptors->size();
+  for( u64 i = 0; i < size; ++i ) {
+    const SMYPFileDescriptor* descriptor = &((*descriptors)[i]);
+    c8 fileName[17];
 
 #ifdef _IRR_LINUX_PLATFORM_
-        sprintf(file_name, "%lX", descriptor->hash);
+    sprintf(fileName , "%lX", descriptor->hash);
 #endif
 
 #ifdef _IRR_WINDOWS_
-        sprintf(file_name, "%I64X", descriptor->hash);
+    sprintf(fileName, "%I64X", descriptor->hash);
 #endif
 
-        addItem(io::path(file_name), descriptor->starting_position, descriptor->uncompressed_size, false, index++ );
-    }
+    addItem(io::path(fileName), descriptor->startingPosition, descriptor->uncompressedSize, false, index++ );
+  }
 }
 
 
@@ -184,12 +186,12 @@ io::IReadFile* CMYPReader::createAndOpenFile(u32 index)
 
 	const io::SFileListEntry &entry = Files[index];
     // Get additional information regarding MYP files.
-    SMYPFileDescriptor desc = myp_file_database.get_file_descriptor(entry.ID);
-    if( desc.compression_method ) {
+    SMYPFileDescriptor desc = MYPFileDatabase.getFileDescriptor(entry.ID);
+    if( desc.compressionMethod ) {
         unsigned char* data;
-        u64 data_size;
-        myp_file_database.get_file_data(&desc,&data, &data_size);
-        return io::createMemoryReadFile((void*)data, desc.uncompressed_size, entry.FullName,true);
+        u64 dataSize;
+        MYPFileDatabase.getFileData(desc, &data, &dataSize);
+        return io::createMemoryReadFile((void*)data, desc.uncompressedSize, entry.FullName,true);
     } else {
         return io::createLimitReadFile( entry.FullName, File, entry.Offset, entry.Size );
     }

@@ -12,6 +12,7 @@
 #include "irrTypes.h"
 #include "irrString.h"
 #include "irrArray.h"
+#include "IReadFile.h"
 
 namespace irr {
   namespace io {
@@ -20,69 +21,63 @@ namespace irr {
 #define MYP_ERROR_NFILES_MISSMATCH  0x02
 #define MYP_ERROR_FILE_NOT_FOUND    0x03
 
-        struct SMYPFileDescriptor {
+    struct SMYPFileDescriptor {
 
-            u64  table_entry_position;
-            u64  starting_position;
-            u64  hash;
-            u32  header_size;
-            u32  compressed_size;
-            u32  uncompressed_size;
-            u8   compression_method;
-            u8   archive_index;
+      u64  tableEntryPosition;
+      u64  startingPosition;
+      u64  hash;
+      u32  headerSize;
+      u32  compressedSize;
+      u32  uncompressedSize;
+      u8   compressionMethod;
+    };
 
-        };
-
-        struct SMYPFileDatabaseStats {
-            public:
-                s32 num_files_;
-        };
+    struct SMYPFileDatabaseStats {
+      public:
+        s32 numFiles;
+    };
 
 
-        class CMYPFileDatabase {
-            IRR_NON_COPYABLE(CMYPFileDatabase);
+    class CMYPFileDatabase {
+      IRR_NON_COPYABLE(CMYPFileDatabase);
 
-            friend class CMYPReader;
+      friend class CMYPReader;
 
-            public:
+      public:
 
-            CMYPFileDatabase();
-            ~CMYPFileDatabase();
+      CMYPFileDatabase( IReadFile* file );
+      ~CMYPFileDatabase();
 
-            u32 load_archive( const c8* file_name );
+      u32 loadArchive();
 
-            //u32 load_hash_dictionary( const c8* file_name );
+      u32 extract( const io::path& fileName );
 
-            u32 extract( const c8* path );
+      u32 extract( const io::path& fileName, const io::path& outputFolderName );
 
-            u32 extract( const c8* file_name, const c8* path );
+      SMYPFileDatabaseStats getStats() const;
 
-            SMYPFileDatabaseStats get_stats() const;
+      u32 getFileData(const io::path& fileName, u8** data, u64* dataSize);
 
-            u32 get_file_data(const c8* file_name, u8** data, u64* data_size);
-
-            u32 free_file_data( u8* data);
+      u32 freeFileData( u8* data);
 
 
-            private:
+      private:
 
-            const core::array<SMYPFileDescriptor>* get_descriptors() const { return &file_descriptors_; }
+      const core::array<SMYPFileDescriptor>* getDescriptors() const { return &FileDescriptors; }
 
-            SMYPFileDescriptor get_file_descriptor( u32 index ) const { return file_descriptors_[index]; } 
+      SMYPFileDescriptor getFileDescriptor( u32 index ) const { return FileDescriptors[index]; } 
 
-            u32 get_file_data(const SMYPFileDescriptor* file_descriptor, u8** data, u64* data_size);
+      u32 getFileData(const SMYPFileDescriptor& fileDescriptor, u8** data, u64* dataSize);
 
-            //void add_hash_to_filename_entry( const c8* line );
+      //void add_hash_to_filename_entry( const c8* line );
 
-            u32 extract( const SMYPFileDescriptor* file_descriptor, const c8* path, const c8* output_file_name = NULL );
+      u32 extract( const SMYPFileDescriptor& file_descriptor, const io::path& outputFolderName, const io::path& fileName );
 
-            private:
-            core::array<c8*>                            archive_names_; 
-            core::array<FILE*>                          archive_files_;                                       
-            core::array<SMYPFileDescriptor>             file_descriptors_;
-            //std::map<u64, core::stringc>                      hash_to_file_names_;
-        };
-}
+      private:
+      io::IReadFile*                              File;
+      core::array<SMYPFileDescriptor>             FileDescriptors;
+    };
+  }
 }
 
 #endif
