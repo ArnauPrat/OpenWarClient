@@ -30,7 +30,7 @@ SET( OPENWARCLIENT_SOURCE_FILES ./main.cpp
 ADD_EXECUTABLE(openwarclient ${OPENWARCLIENT_SOURCE_FILES})  
 ADD_DEPENDENCIES(openwarclient irrlicht)
 #TARGET_LINK_LIBRARIES(openwarclient irrlicht ssl crypto pthread z)
-TARGET_LINK_LIBRARIES(openwarclient irrlicht z)
+TARGET_LINK_LIBRARIES(openwarclient irrlicht)
 
 
 SET( OPENWARCLIENT_OUTPUT_DIR "${CMAKE_BINARY_DIR}/bin/client/")

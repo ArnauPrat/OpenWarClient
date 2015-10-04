@@ -35,7 +35,7 @@ namespace io
 		//! changes position in file, returns true if successful
 		//! if relativeMovement==true, the pos is changed relative to current pos,
 		//! otherwise from begin of file
-		virtual bool seek(long finalPos, bool relativeMovement = false);
+		virtual bool seek(s64 finalPos, bool relativeMovement = false);
 
 		//! returns size of file
 		virtual long getSize() const;

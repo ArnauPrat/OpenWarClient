@@ -13,15 +13,6 @@ set(CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} -std=c++11 -Wall -fstrict-aliasing -pipe
 set(CMAKE_CXX_FLAGS_DEBUG "${CMAKE_CXX_FLAGS_DEBUG}  -O0 -g -pg")
 set(CMAKE_CXX_FLAGS_RELEASE "${CMAKE_CXX_FLAGS_RELEASE} -O2 -DNDEBUG ")
 
-IF( UNIX )
-  SET(PLATFORM "_LINUX")
-ENDIF(UNIX)
-
-IF( WIN32 )
-  SET(PLATFORM "_WINDOWS")
-ENDIF(WIN32)
-
-set(CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} -D${PLATFORM}")
 
 
 INCLUDE_DIRECTORIES(./)
@@ -32,9 +23,6 @@ SET( OPENWARCLIENT_SOURCE_FILES ./main.cpp
                                 ./login_sequence.cpp
                                 ./core/marshalling.cpp
                                 ./io/Properties.cpp
-                                ./io/MYPFileDatabase.cpp
-                                ./io/MYPReader.cpp
-                                ./io/hash.cpp
                                 ./network/NetworkSocket.cpp
   )
 

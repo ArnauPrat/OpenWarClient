@@ -66,7 +66,7 @@ s32 CLimitReadFile::read(void* buffer, u32 sizeToRead)
 
 
 //! changes position in file, returns true if successful
-bool CLimitReadFile::seek(long finalPos, bool relativeMovement)
+bool CLimitReadFile::seek(s64 finalPos, bool relativeMovement)
 {
 #if 1
 	Pos = core::s32_clamp(finalPos + (relativeMovement ? Pos : 0 ), 0, AreaEnd - AreaStart);

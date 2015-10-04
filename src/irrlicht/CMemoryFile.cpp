@@ -68,7 +68,7 @@ s32 CMemoryFile::write(const void* buffer, u32 sizeToWrite)
 //! changes position in file, returns true if successful
 //! if relativeMovement==true, the pos is changed relative to current pos,
 //! otherwise from begin of file
-bool CMemoryFile::seek(long finalPos, bool relativeMovement)
+bool CMemoryFile::seek(s64 finalPos, bool relativeMovement)
 {
 	if (relativeMovement)
 	{

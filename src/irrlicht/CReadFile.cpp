@@ -41,12 +41,13 @@ s32 CReadFile::read(void* buffer, u32 sizeToRead)
 //! changes position in file, returns true if successful
 //! if relativeMovement==true, the pos is changed relative to current pos,
 //! otherwise from begin of file
-bool CReadFile::seek(long finalPos, bool relativeMovement)
+bool CReadFile::seek(s64 finalPos, bool relativeMovement)
 {
 	if (!isOpen())
 		return false;
 
-	return fseek(File, finalPos, relativeMovement ? SEEK_CUR : SEEK_SET) == 0;
+	//return fseek(File, finalPos, relativeMovement ? SEEK_CUR : SEEK_SET) == 0;
+	return fseeko64(File, finalPos, relativeMovement ? SEEK_CUR : SEEK_SET) == 0;
 }
 
 

@@ -35,7 +35,7 @@ namespace io
 		virtual s32 write(const void* buffer, u32 sizeToWrite);
 
 		//! changes position in file, returns true if successful
-		virtual bool seek(long finalPos, bool relativeMovement = false);
+		virtual bool seek(s64 finalPos, bool relativeMovement = false);
 
 		//! returns size of file
 		virtual long getSize() const;

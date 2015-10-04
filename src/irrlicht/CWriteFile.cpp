@@ -54,7 +54,7 @@ s32 CWriteFile::write(const void* buffer, u32 sizeToWrite)
 //! changes position in file, returns true if successful
 //! if relativeMovement==true, the pos is changed relative to current pos,
 //! otherwise from begin of file
-bool CWriteFile::seek(long finalPos, bool relativeMovement)
+bool CWriteFile::seek(s64 finalPos, bool relativeMovement)
 {
 	if (!isOpen())
 		return false;

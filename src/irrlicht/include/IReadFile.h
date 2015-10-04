@@ -29,7 +29,7 @@ namespace io
 		changed relative to current position. Otherwise the position is changed
 		from beginning of file.
 		\return True if successful, otherwise false. */
-		virtual bool seek(long finalPos, bool relativeMovement = false) = 0;
+		virtual bool seek(s64 finalPos, bool relativeMovement = false) = 0;
 
 		//! Get size of file.
 		/** \return Size of the file in bytes. */
