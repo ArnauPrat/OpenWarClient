@@ -30,4 +30,4 @@ set(CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} -D${PLATFORM}")
 
 ADD_SUBDIRECTORY(src/irrlicht)
 ADD_SUBDIRECTORY(src/client)
-#ADD_SUBDIRECTORY(src/tools/myptools)
+ADD_SUBDIRECTORY(src/tools/myptools)

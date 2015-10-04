@@ -3,7 +3,12 @@
 #include <stdio.h>
 #include <stdlib.h>
 #include <string.h>
-#include <io/MYPFileDatabase.h> 
+#include <CFileSystem.h>
+#include <CMYPReader.h>
+#include <IReadFile.h>
+#include <IWriteFile.h>
+
+using namespace irr;
 
 #define CHECK_ARGUMENT_STRING(index, option, variable) \
 	if( strcmp(argv[index],option) == 0 ){ \
@@ -24,29 +29,38 @@ void print_options( const char* file_name ) {
   printf("q - Quit\n");
 }
 
-void do_exists(owc::MYPFileDatabase* file_database) {
+void extract(io::CFileSystem* file_system, io::IReadFile* read_file, const io::path& real_file_name, const io::path& output_folder ) {
+  io::path final_path;
+  final_path.append(output_folder);
+  final_path.append("\\").append(real_file_name);
+  io::IWriteFile* write_file = file_system->createAndWriteFile(final_path);
+  u8 buffer[1024];
+  u32 byte_count = 0;
+  while( (byte_count = read_file->read(buffer, 1024)) != 0 ) {
+    write_file->write(buffer,byte_count);
+  }
+  write_file->drop();
+}
+
+void do_exists(io::CFileSystem* file_system ) {
   char file_name[256];
   printf("Enter file name: \n");
   scanf("%256s",file_name);
-  unsigned char* data;
   size_t data_size;
-  if(file_database->get_file_data((const char*)file_name, &data, &data_size)) {
-    printf("Unexisting file\n");
-    return;
+  io::IReadFile* file = file_system->createAndOpenFile(io::path(file_name));
+  if(file) {
+    printf("Enter output folder: \n");
+    char folder_name[256];
+    scanf("%256s",folder_name);
+    io::path folder_path(folder_name);
+    extract(file_system, file, io::path(file_name), io::path(folder_path));
+    file->drop();
   }
-
-  printf("Enter output folder: \n");
-  char folder_name[256];
-  scanf("%256s",folder_name);
-  char final_name[512];
-  if(file_database->extract(file_name, folder_name))
-    printf("File extracted: %s\n", final_name);
-  free(data);
 }
 
-void do_export_files(const char* files_file_name, owc::MYPFileDatabase* file_database) {
+void do_export_files(const char* files_file_name, io::CFileSystem* file_system ) {
 
-  printf("Enter output folder: \n");
+  /*printf("Enter output folder: \n");
   char folder_name[256];
   scanf("%256s",folder_name);
 
@@ -72,16 +86,23 @@ void do_export_files(const char* files_file_name, owc::MYPFileDatabase* file_dat
   }
   free(line_buffer);
   fclose(fp);
+  */
 }
 
 bool is_option(const char* option) {
   return option[0] == '-';
 }
 
+
+
+
 int main(int argc, const char** argv) {
     printf("Welcome to OpenWarClient MYP file extractor ...\n");
 
-    owc::MYPFileDatabase myp_file;
+    io::CFileSystem* file_system = new irr::io::CFileSystem();
+    io::IArchiveLoader* myp_loader = new irr::io::CMYPArchiveLoader(file_system);
+    file_system->addArchiveLoader(myp_loader);
+
 
     const char* files_file_name = NULL;
     for (int i = 1; i < argc; ) {
@@ -89,9 +110,8 @@ int main(int argc, const char** argv) {
           i++;
           while( i < argc && !is_option(argv[i]) ) {
             printf("Loading archive %s \n", argv[i]);
-            int err = myp_file.load_archive(argv[i]);
-            if(err) {
-              printf("ERROR LOADING ARCHIVE %s %d\n",argv[i], err);
+            if(!file_system->addFileArchive( io::path(argv[i]), false, false, io::EFAT_MYP)) {
+              printf("ERROR loading %s\n",argv[i]);
             }
             i++;
           }
@@ -110,13 +130,15 @@ int main(int argc, const char** argv) {
       scanf("\n%c",&option);
       switch(option) {
         case 'e':
-          do_exists(&myp_file);
+          do_exists(file_system);
           break;
         case 'f':
-          do_export_files(files_file_name,&myp_file);
+          do_export_files(files_file_name, file_system);
           break;
       }
     } while(option != 'q');
+    delete file_system;
+    delete myp_loader;
     return 0;
 }
 
