@@ -11,6 +11,10 @@
 #include <sys/types.h>
 #include <sys/stat.h>
 
+#ifdef _WINDOWS
+#include <windows.h>
+#endif
+
 using namespace irr;
 
 #define CHECK_ARGUMENT_STRING(index, option, variable) \
@@ -32,6 +36,7 @@ void print_options( const char* file_name ) {
   printf("q - Quit\n");
 }
 
+
 void extract(io::CFileSystem* file_system, io::IReadFile* read_file, const io::path& real_file_name, const io::path& output_folder ) {
   io::path final_path;
   final_path.append(output_folder);
@@ -45,6 +50,7 @@ void extract(io::CFileSystem* file_system, io::IReadFile* read_file, const io::p
 
 #ifdef _WINDOWS 
   c8 SEPARATOR = '\\';
+  final_path.replace('/','\\');
 #endif
 
   core::array<core::stringc> ret;
@@ -53,7 +59,6 @@ void extract(io::CFileSystem* file_system, io::IReadFile* read_file, const io::p
   io::path current_path;
   for (int i = 0; i < ret.size()-1; ++i) {
     current_path.append(ret[i]).append(SEPARATOR);
-    printf("%s\n", current_path.c_str());
 
 #ifdef _LINUX 
     mkdir((c8*)current_path.c_str(), S_IRWXU);
