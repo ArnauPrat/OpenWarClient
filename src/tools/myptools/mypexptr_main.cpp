@@ -8,6 +8,9 @@
 #include <IReadFile.h>
 #include <IWriteFile.h>
 
+#include <sys/types.h>
+#include <sys/stat.h>
+
 using namespace irr;
 
 #define CHECK_ARGUMENT_STRING(index, option, variable) \
@@ -32,8 +35,40 @@ void print_options( const char* file_name ) {
 void extract(io::CFileSystem* file_system, io::IReadFile* read_file, const io::path& real_file_name, const io::path& output_folder ) {
   io::path final_path;
   final_path.append(output_folder);
-  final_path.append("\\").append(real_file_name);
+  final_path.append("/").append(real_file_name);
+
+  /* Creating folders from path */
+  c8* subPath = (c8*)malloc(sizeof(c8)*final_path.size()+1);
+#ifdef _LINUX 
+  c8 SEPARATOR = '/';
+#endif
+
+#ifdef _WINDOWS 
+  c8 SEPARATOR = '\\';
+#endif
+
+  core::array<core::stringc> ret;
+  final_path.split<core::array<core::stringc> >(ret,&SEPARATOR);
+
+  io::path current_path;
+  for (int i = 0; i < ret.size()-1; ++i) {
+    current_path.append(ret[i]).append(SEPARATOR);
+    printf("%s\n", current_path.c_str());
+
+#ifdef _LINUX 
+    mkdir((c8*)current_path.c_str(), S_IRWXU);
+#endif
+#ifdef _WINDOWS 
+    CreateDirectory((c8*)current_path.c_str(), NULL);
+#endif
+    
+  }
+
   io::IWriteFile* write_file = file_system->createAndWriteFile(final_path);
+  if( write_file == NULL ) {
+    printf("The file could not be created\n");
+    return;
+  }
   u8 buffer[1024];
   u32 byte_count = 0;
   while( (byte_count = read_file->read(buffer, 1024)) != 0 ) {
