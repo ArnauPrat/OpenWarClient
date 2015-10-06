@@ -54,7 +54,8 @@ namespace owc {
         core::rect<s32>(10,10,260,22), true);
     //smgr_->addCameraSceneNode(0, core::vector3df(0,30,-40), core::vector3df(0,5,0));
     scene::ICameraSceneNode* camera = smgr_->addCameraSceneNodeFPS();
-    1ogger_ = device_->getLogger();
+    camera->setFarValue(10000.0f);
+    logger_ = device_->getLogger();
 
     /** Adding resource files and directories **/
     std::string data_dir = properties.get("data_dir");
@@ -120,7 +121,7 @@ namespace owc {
         -1,                 
         core::vector3df(0.0f, 0.f, 0.f),     // position
         core::vector3df(0.0f, 0.f, 0.f),     // rotation
-        core::vector3df(1.0f, 1.0f, 1.0f),  // scale
+        core::vector3df(64.0f, 256.0f, 64.0f),  // scale
         video::SColor ( 255, 255, 255, 255 ),   // vertexColor
         3,                  
         scene::ETPS_17,             
