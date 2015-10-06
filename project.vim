@@ -1,4 +1,3 @@
-
 let g:NERDTreeBookmarksFile = '.NERDTREEBookmarks'
 let g:ctrlp_working_path_mode = 'r'
 "let g:clang_compilation_database = 'C:\Users\Arnau\OpenWarClient\build'
