@@ -873,6 +873,55 @@ ITerrainSceneNode* CSceneManager::addTerrainSceneNode(
 
 //! Adds a terrain scene node to the scene graph.
 ITerrainSceneNode* CSceneManager::addTerrainSceneNode(
+	const io::path& baseHeightMapFileName,
+	const io::path& offsetHeightMapFileName,
+	ISceneNode* parent, s32 id,
+	const core::vector3df& position,
+	const core::vector3df& rotation,
+	const core::vector3df& scale,
+	video::SColor vertexColor,
+	s32 maxLOD, E_TERRAIN_PATCH_SIZE patchSize, s32 smoothFactor,
+	bool addAlsoIfHeightmapEmpty)
+{
+	io::IReadFile* baseFile = FileSystem->createAndOpenFile( baseHeightMapFileName );
+	io::IReadFile* offsetFile = FileSystem->createAndOpenFile( offsetHeightMapFileName );
+
+	if ((!baseFile || !offsetFile) && !addAlsoIfHeightmapEmpty)
+	{
+    if(!baseFile) {
+      os::Printer::log("Could not load base heightmap file.", ELL_ERROR);
+    }
+
+    if(!offsetFile) {
+      os::Printer::log("Could not load offset heightmap file.", ELL_ERROR);
+    }
+
+		os::Printer::log("Could not load terrain, because file could not be opened.",
+		baseHeightMapFileName, ELL_ERROR);
+
+    if (baseFile)
+      baseFile->drop();
+
+    if (offsetFile)
+      offsetFile->drop();
+		return 0;
+	}
+
+	ITerrainSceneNode* terrain = addTerrainSceneNode(baseFile, offsetFile, parent, id,
+		position, rotation, scale, vertexColor, maxLOD, patchSize,
+		smoothFactor, addAlsoIfHeightmapEmpty);
+
+	if (baseFile)
+		baseFile->drop();
+
+	if (offsetFile)
+		offsetFile->drop();
+
+	return terrain;
+}
+
+//! Adds a terrain scene node to the scene graph.
+ITerrainSceneNode* CSceneManager::addTerrainSceneNode(
 	io::IReadFile* heightMapFile,
 	ISceneNode* parent, s32 id,
 	const core::vector3df& position,
@@ -886,7 +935,7 @@ ITerrainSceneNode* CSceneManager::addTerrainSceneNode(
 	if (!parent)
 		parent = this;
 
-	if (!heightMapFile && !addAlsoIfHeightmapEmpty)
+	if (!heightMapFile   && !addAlsoIfHeightmapEmpty)
 	{
 		os::Printer::log("Could not load terrain, because file could not be opened.", ELL_ERROR);
 		return 0;
@@ -895,7 +944,46 @@ ITerrainSceneNode* CSceneManager::addTerrainSceneNode(
 	CTerrainSceneNode* node = new CTerrainSceneNode(parent, this, FileSystem, id,
 		maxLOD, patchSize, position, rotation, scale);
 
-	if (!node->loadHeightMap(heightMapFile, vertexColor, smoothFactor))
+	if (!node->loadHeightMap(heightMapFile,vertexColor, smoothFactor))
+	{
+		if (!addAlsoIfHeightmapEmpty)
+		{
+			node->remove();
+			node->drop();
+			return 0;
+		}
+	}
+
+	node->drop();
+	return node;
+}
+
+//! Adds a terrain scene node to the scene graph.
+ITerrainSceneNode* CSceneManager::addTerrainSceneNode(
+	io::IReadFile* baseHeightMapFile,
+	io::IReadFile* offsetHeightMapFile,
+	ISceneNode* parent, s32 id,
+	const core::vector3df& position,
+	const core::vector3df& rotation,
+	const core::vector3df& scale,
+	video::SColor vertexColor,
+	s32 maxLOD, E_TERRAIN_PATCH_SIZE patchSize,
+	s32 smoothFactor,
+	bool addAlsoIfHeightmapEmpty)
+{
+	if (!parent)
+		parent = this;
+
+	if ((!baseHeightMapFile || !offsetHeightMapFile ) && !addAlsoIfHeightmapEmpty)
+	{
+		os::Printer::log("Could not load terrain, because file could not be opened.", ELL_ERROR);
+		return 0;
+	}
+
+	CTerrainSceneNode* node = new CTerrainSceneNode(parent, this, FileSystem, id,
+		maxLOD, patchSize, position, rotation, scale);
+
+	if (!node->loadHeightMap(baseHeightMapFile, offsetHeightMapFile, vertexColor, smoothFactor))
 	{
 		if (!addAlsoIfHeightmapEmpty)
 		{

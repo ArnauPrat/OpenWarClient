@@ -54,7 +54,7 @@ namespace owc {
         core::rect<s32>(10,10,260,22), true);
     //smgr_->addCameraSceneNode(0, core::vector3df(0,30,-40), core::vector3df(0,5,0));
     scene::ICameraSceneNode* camera = smgr_->addCameraSceneNodeFPS();
-    logger_ = device_->getLogger();
+    1ogger_ = device_->getLogger();
 
     /** Adding resource files and directories **/
     std::string data_dir = properties.get("data_dir");
@@ -114,12 +114,13 @@ namespace owc {
 
     logger_->log("Loading terrain", irr::ELL_INFORMATION);
     scene::ITerrainSceneNode* terrain = smgr_->addTerrainSceneNode(
-        "zones/zone031/offset.pcx",
+        "zones/zone130/offset.pcx",
+        "zones/zone130/terrain.pcx",
         0,                  
         -1,                 
         core::vector3df(0.0f, 0.f, 0.f),     // position
         core::vector3df(0.0f, 0.f, 0.f),     // rotation
-        core::vector3df(1.0f, 4.0f, 1.0f),  // scale
+        core::vector3df(1.0f, 1.0f, 1.0f),  // scale
         video::SColor ( 255, 255, 255, 255 ),   // vertexColor
         3,                  
         scene::ETPS_17,             

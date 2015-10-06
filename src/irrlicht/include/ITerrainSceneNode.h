@@ -163,7 +163,7 @@ namespace scene
 		\param offsetFile The file to read the offset image from. File is not rewinded.
 		\param vertexColor Color of all vertices.
 		\param smoothFactor Number of smoothing passes. */
-		virtual bool load2WayHeightMap(io::IReadFile* baseFile, io::IReadFile* offsetFile,
+		virtual bool loadHeightMap(io::IReadFile* baseFile, io::IReadFile* offsetFile,
 			video::SColor vertexColor = video::SColor ( 255, 255, 255, 255 ), s32 smoothFactor = 0 ) = 0;
 
 		//! Initializes the terrain data.  Loads the vertices from the heightMapFile.
