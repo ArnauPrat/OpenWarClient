@@ -36,7 +36,6 @@ void print_options( const char* file_name ) {
   printf("q - Quit\n");
 }
 
-
 void extract(io::CFileSystem* file_system, io::IReadFile* read_file, const io::path& real_file_name, const io::path& output_folder ) {
   io::path final_path;
   final_path.append(output_folder);
@@ -100,7 +99,7 @@ void do_exists(io::CFileSystem* file_system ) {
 
 void do_export_files(const char* files_file_name, io::CFileSystem* file_system ) {
 
-  /*printf("Enter output folder: \n");
+  printf("Enter output folder: \n");
   char folder_name[256];
   scanf("%256s",folder_name);
 
@@ -121,12 +120,16 @@ void do_export_files(const char* files_file_name, io::CFileSystem* file_system )
       line_size = strlen(line_buffer);
     }
     line_buffer[strlen(line_buffer)-1] = '\0';
-    if(file_database->extract(line_buffer, folder_name))
+   // if(file_database->extract(line_buffer, folder_name))
+    io::IReadFile* read_file = file_system->createAndOpenFile(io::path(line_buffer));
+    if(read_file != NULL ) {
+      extract(file_system, read_file, io::path(line_buffer), io::path(folder_name));
+      read_file->drop();
       printf("File extracted: %s\n", line_buffer);
+    }
   }
   free(line_buffer);
   fclose(fp);
-  */
 }
 
 bool is_option(const char* option) {

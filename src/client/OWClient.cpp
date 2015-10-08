@@ -54,7 +54,7 @@ namespace owc {
         core::rect<s32>(10,10,260,22), true);
     //smgr_->addCameraSceneNode(0, core::vector3df(0,30,-40), core::vector3df(0,5,0));
     scene::ICameraSceneNode* camera = smgr_->addCameraSceneNodeFPS();
-    camera->setFarValue(10000.0f);
+    camera->setFarValue(64000.0f);
     logger_ = device_->getLogger();
 
     /** Adding resource files and directories **/
