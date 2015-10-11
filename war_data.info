@@ -15,3 +15,13 @@ several files that are rooted at the zones/zoneXXX/ folder, where XXX is a three
 zone id. Now I list the files that can be found in this folder and summarize their content:
 
 - fixtures.csv: 
+
+
+
+
+*******
+Terrain
+*******
+
+Given a zone, the terrain data (basically the mesh and how it is textured), is stored using several files. The mesh data
+is stoed 
