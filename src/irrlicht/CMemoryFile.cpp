@@ -102,6 +102,18 @@ long CMemoryFile::getPos() const
 	return Pos;
 }
 
+//! return The number of characters read. */
+u32 CMemoryFile::readLine( core::stringc* line ) {
+  int c;
+
+  (*line)="";
+  while ( (Pos < Len) && (((c8*)Buffer)[Pos] != '\n') ) {
+    line->append(((c8*)Buffer)[Pos]);
+    Pos++;
+  }
+  return line->size();
+}
+
 
 //! returns name of file
 const io::path& CMemoryFile::getFileName() const

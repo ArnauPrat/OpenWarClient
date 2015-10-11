@@ -5,7 +5,7 @@
 
 #include <irrTypes.h>
 #include <irrMacros.h>
-#include "io/Properties.h"
+#include "CProperties.h"
 #include <irrlicht.h>
 #include <CMYPReader.h>
 #include <string>
@@ -44,7 +44,7 @@ namespace owc {
     static io::IFileSystem*       fsystem_;
     static ILogger*               logger_;
     
-    static Properties*            properties_;
+    static io::CProperties*            properties_;
 
     static io::CMYPArchiveLoader*     myp_archive_loader_;
 
