@@ -5,7 +5,7 @@
 #include <irrTypes.h>
 #include <irrMacros.h>
 #include <map>
-#include <string>
+#include <irrString.h>
 
 
 using namespace irr;

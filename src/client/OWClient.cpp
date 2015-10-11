@@ -5,6 +5,7 @@
 #include "network/NetworkSocket.h"
 #include <string>
 #include <thread>
+#include <cstdlib>
 
 namespace owc {
 
@@ -27,12 +28,9 @@ namespace owc {
 
   u32 OWClient::init( const c8* config_file_name ) {
 
-    /** Starting logging system */
-    properties_ = new Properties();
-
     /** Reading configuration file **/
-    Properties properties;
-    int res = properties.load(config_file_name);
+    properties_ = new Properties();
+    int res = properties_->load(config_file_name);
     if(res) return res;
 
     /** Initializing Irrlicht subsystems **/
@@ -52,13 +50,18 @@ namespace owc {
     guienv_ = device_->getGUIEnvironment();
     guienv_->addStaticText(L"Hello World! This is the Irrlicht Software renderer!",
         core::rect<s32>(10,10,260,22), true);
-    //smgr_->addCameraSceneNode(0, core::vector3df(0,30,-40), core::vector3df(0,5,0));
+
+
+    /** Setting up the camera */
     scene::ICameraSceneNode* camera = smgr_->addCameraSceneNodeFPS();
     camera->setFarValue(64000.0f);
+    core::list<scene::ISceneNodeAnimator*>::ConstIterator camera_animators = camera->getAnimators().begin();
+    scene::ISceneNodeAnimatorCameraFPS* camera_animator = (scene::ISceneNodeAnimatorCameraFPS*) *camera_animators;
+    camera_animator->setMoveSpeed( 5.0f );
     logger_ = device_->getLogger();
 
     /** Adding resource files and directories **/
-    std::string data_dir = properties.get("data_dir");
+    std::string data_dir = properties_->get("data_dir");
     myp_archive_loader_ = new io::CMYPArchiveLoader( fsystem_ );
     fsystem_->addArchiveLoader( myp_archive_loader_ ); 
 
@@ -113,10 +116,12 @@ namespace owc {
     }
 
 
+    std::string zone = properties_->get("zone").c_str();
+
     logger_->log("Loading terrain", irr::ELL_INFORMATION);
     scene::ITerrainSceneNode* terrain = smgr_->addTerrainSceneNode(
-        "zones/zone130/offset.pcx",
-        "zones/zone130/terrain.pcx",
+        std::string("zones/zone").append(zone.c_str()).append("/offset.pcx").c_str(),
+        std::string("zones/zone").append(zone.c_str()).append("/terrain.pcx").c_str(),
         0,                  
         -1,                 
         core::vector3df(0.0f, 0.f, 0.f),     // position
