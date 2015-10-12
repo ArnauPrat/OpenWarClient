@@ -73,7 +73,7 @@ namespace owc {
 
     core::list<scene::ISceneNodeAnimator*>::ConstIterator camera_animators = camera->getAnimators().begin();
     scene::ISceneNodeAnimatorCameraFPS* camera_animator = (scene::ISceneNodeAnimatorCameraFPS*) *camera_animators;
-    camera_animator->setMoveSpeed( 1.0f );
+    camera_animator->setMoveSpeed( 5.0f );
 
 
     logger_ = device_->getLogger();
