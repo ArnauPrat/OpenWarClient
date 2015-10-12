@@ -1,5 +1,6 @@
 
 TODO:
-- allow loading multiple myp archives
-- multiples fopen
-- usar les mateixes funcions de parseig de valors a tot arreu
+- refactor MYPReader* to user irrlicht types
+- adapt myptools
+- adapt mypfiledatabase to irrlicht code conventions
+- implement loadLeightmap2Way

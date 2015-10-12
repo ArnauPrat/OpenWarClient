@@ -3,4 +3,5 @@
 *.swp
 *.make
 *.cmake
+*.cpp~
 Makefile
