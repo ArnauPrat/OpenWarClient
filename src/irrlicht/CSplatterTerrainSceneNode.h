@@ -1,3 +1,4 @@
+//
 // Copyright (C) 2002-2012 Nikolaus Gebhardt
 // This file is part of the "Irrlicht Engine".
 // For conditions of distribution and use, see copyright notice in irrlicht.h
@@ -50,17 +51,11 @@ namespace scene
 
 		virtual ~CSplatterTerrainSceneNode();
 
-		//! Initializes the terrain data.  Loads the vertices from the heightMapFile.
-		virtual bool loadHeightMap(io::IReadFile* file,
-			video::SColor vertexColor = video::SColor ( 255, 255, 255, 255 ), s32 smoothFactor = 0 );
 
     //! Initializes the terrain data. Loads the vertices from two heightMapFiles representing a base and an offset.
 		virtual bool loadHeightMap(io::IReadFile* baseFile, io::IReadFile* offsetFile,
 			video::SColor vertexColor = video::SColor ( 255, 255, 255, 255 ), s32 smoothFactor = 0 );
 
-		//! Initializes the terrain data.  Loads the vertices from the heightMapFile.
-		virtual bool loadHeightMapRAW(io::IReadFile* file, s32 bitsPerPixel = 16,
-			bool signedData=true, bool floatVals=false, s32 width=0, video::SColor vertexColor = video::SColor ( 255, 255, 255, 255 ), s32 smoothFactor = 0 );
 
 		//! Returns the material based on the zero based index i. This scene node only uses
 		//! 1 material.
@@ -279,7 +274,7 @@ namespace scene
 		void calculateNormals(IDynamicMeshBuffer* mb);
 
 		//! create patches, stuff that needs to only be done once for patches goes here.
-		void createPatches();
+		void createPatches( IDynamicMeshBuffer* mb );
 
 		//! calculate the internal STerrainData structure
 		void calculatePatchData();
@@ -299,7 +294,7 @@ namespace scene
 		STerrainData TerrainData;
 		SMesh* Mesh;
 
-		IDynamicMeshBuffer *RenderBuffer;
+		IDynamicMeshBuffer** RenderBuffer;
 
 		u32 VerticesToRender;
 		u32 IndicesToRender;
