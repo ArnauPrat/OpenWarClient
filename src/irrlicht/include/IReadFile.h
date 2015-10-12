@@ -39,6 +39,12 @@ namespace io
 		/** \return Current position in the file in bytes. */
 		virtual long getPos() const = 0;
 
+		//! Read a line of the file (until '\n' is found).
+		/** 
+     \param line The stringc where the line will be stored
+     \return The number of characters read. */
+    virtual u32 readLine( core::stringc* line ) = 0;
+
 		//! Get name of file.
 		/** \return File name as zero terminated character string. */
 		virtual const io::path& getFileName() const = 0;

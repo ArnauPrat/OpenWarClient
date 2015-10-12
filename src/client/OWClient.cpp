@@ -5,6 +5,11 @@
 #include "network/NetworkSocket.h"
 #include <string>
 #include <thread>
+#include <cstdlib>
+#include <world/CZone.h>
+#include <os.h>
+#include <vector3d.h>
+#include <irrMath.h>
 
 namespace owc {
 
@@ -16,24 +21,17 @@ namespace owc {
   video::IVideoDriver*    OWClient::driver_ = NULL;
   scene::ISceneManager*   OWClient::smgr_ = NULL;
   gui::IGUIEnvironment*   OWClient::guienv_ = NULL;
-  io::IFileSystem*        OWClient::fsystem_ = NULL;
+  irr::io::IFileSystem*        OWClient::fsystem_ = NULL;
   ILogger*                OWClient::logger_ = NULL;
 
-  Properties*             OWClient::properties_ = NULL;
+  io::CProperties*             OWClient::properties_ = NULL;
 
-  io::CMYPArchiveLoader*  OWClient::myp_archive_loader_ = NULL;
+  irr::io::CMYPArchiveLoader*  OWClient::myp_archive_loader_ = NULL;
 
 
 
   u32 OWClient::init( const c8* config_file_name ) {
 
-    /** Starting logging system */
-    properties_ = new Properties();
-
-    /** Reading configuration file **/
-    Properties properties;
-    int res = properties.load(config_file_name);
-    if(res) return res;
 
     /** Initializing Irrlicht subsystems **/
     /*device_ = createDevice( video::EDT_SOFTWARE, core::dimension2d<u32>(640, 480), 16,
@@ -52,17 +50,42 @@ namespace owc {
     guienv_ = device_->getGUIEnvironment();
     guienv_->addStaticText(L"Hello World! This is the Irrlicht Software renderer!",
         core::rect<s32>(10,10,260,22), true);
-    //smgr_->addCameraSceneNode(0, core::vector3df(0,30,-40), core::vector3df(0,5,0));
+
+    /** Reading configuration file **/
+    properties_ = new io::CProperties();
+    c8 str[256];
+    sprintf(str, "Reading config file: %s", config_file_name );
+    os::Printer::log(str);
+    io::IReadFile* configFile = fsystem_->createAndOpenFile(config_file_name);
+    if(!configFile) {
+      os::Printer::log("Unable to open config file", ELL_ERROR );
+    }
+    int res = properties_->load(configFile);
+    configFile->drop();
+    if(res) return res;
+
+
+    /** Setting up the camera */
     scene::ICameraSceneNode* camera = smgr_->addCameraSceneNodeFPS();
-    1ogger_ = device_->getLogger();
+    camera->setFarValue(64000.0f);
+    //camera->setFOV(1*core::PI/6.0);
+
+
+    core::list<scene::ISceneNodeAnimator*>::ConstIterator camera_animators = camera->getAnimators().begin();
+    scene::ISceneNodeAnimatorCameraFPS* camera_animator = (scene::ISceneNodeAnimatorCameraFPS*) *camera_animators;
+    camera_animator->setMoveSpeed( 1.0f );
+
+
+    logger_ = device_->getLogger();
+
 
     /** Adding resource files and directories **/
-    std::string data_dir = properties.get("data_dir");
-    myp_archive_loader_ = new io::CMYPArchiveLoader( fsystem_ );
+    core::stringc data_dir = properties_->get("data_dir");
+    myp_archive_loader_ = new irr::io::CMYPArchiveLoader( fsystem_ );
     fsystem_->addArchiveLoader( myp_archive_loader_ ); 
 
     logger_->log("Loading art.myp", irr::ELL_INFORMATION);
-    if(!fsystem_->addFileArchive( io::path(data_dir.c_str()).append("/").append("art.myp"), false, false, io::EFAT_MYP)) {
+    if(!fsystem_->addFileArchive( irr::io::path(data_dir.c_str()).append("/").append("art.myp"), false, false, io::EFAT_MYP)) {
       logger_->log("Error loading art.myp", irr::ELL_ERROR);
     }
 
@@ -112,22 +135,11 @@ namespace owc {
     }
 
 
-    logger_->log("Loading terrain", irr::ELL_INFORMATION);
-    scene::ITerrainSceneNode* terrain = smgr_->addTerrainSceneNode(
-        "zones/zone130/offset.pcx",
-        "zones/zone130/terrain.pcx",
-        0,                  
-        -1,                 
-        core::vector3df(0.0f, 0.f, 0.f),     // position
-        core::vector3df(0.0f, 0.f, 0.f),     // rotation
-        core::vector3df(1.0f, 1.0f, 1.0f),  // scale
-        video::SColor ( 255, 255, 255, 255 ),   // vertexColor
-        3,                  
-        scene::ETPS_17,             
-        0                   
-        );
+    u32 zoneId = atoi(properties_->get("zone").c_str());
 
-    terrain->setMaterialFlag(video::EMF_WIREFRAME, true);
+    os::Printer::log("Loading Zone");
+    world::CZone zone(smgr_);
+    zone.loadZone(zoneId);
     return 0;
   }
 

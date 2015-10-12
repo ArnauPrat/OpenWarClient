@@ -236,6 +236,7 @@ SET( IRRSWRENDEROBJ  ./CSoftwareDriver.cpp
   ./CBurningShader_Raster_Reference.cpp )
 
 SET( IRRIOOBJ ./CFileList.cpp 
+  ./CProperties.cpp
   ./CFileSystem.cpp 
   ./CLimitReadFile.cpp 
   ./CMemoryFile.cpp 

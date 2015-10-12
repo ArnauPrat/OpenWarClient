@@ -108,6 +108,20 @@ long CLimitReadFile::getPos() const
 #endif
 }
 
+//! return The number of characters read. */
+u32 CLimitReadFile::readLine( core::stringc* line ) {
+  char c;
+
+  (*line) = "";
+	s32 r = AreaStart + Pos;
+	File->seek(r);
+  while ( (File->read(&c,1) > 0) && (AreaStart+Pos < AreaEnd) && (c != '\n') ) {
+    line->append(c);
+    Pos += 1;
+  }
+  return line->size();
+}
+
 
 //! returns name of file
 const io::path& CLimitReadFile::getFileName() const

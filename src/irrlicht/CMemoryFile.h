@@ -43,6 +43,9 @@ namespace io
 		//! returns where in the file we are.
 		virtual long getPos() const;
 
+    //! return The number of characters read. */
+    virtual u32 readLine( core::stringc* line );
+
 		//! returns name of file
 		virtual const io::path& getFileName() const;
 

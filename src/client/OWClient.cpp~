@@ -21,11 +21,11 @@ namespace owc {
 
   Properties*             OWClient::properties_ = NULL;
 
-  MYPArchiveLoader*       OWClient::myp_archive_loader_ = NULL;
+  io::CMYPArchiveLoader*  OWClient::myp_archive_loader_ = NULL;
 
 
 
-  int OWClient::init( const c8* config_file_name ) {
+  u32 OWClient::init( const c8* config_file_name ) {
 
     /** Starting logging system */
     properties_ = new Properties();
@@ -54,11 +54,12 @@ namespace owc {
         core::rect<s32>(10,10,260,22), true);
     //smgr_->addCameraSceneNode(0, core::vector3df(0,30,-40), core::vector3df(0,5,0));
     scene::ICameraSceneNode* camera = smgr_->addCameraSceneNodeFPS();
+    camera->setFarValue(10000.0f);
     logger_ = device_->getLogger();
 
     /** Adding resource files and directories **/
     std::string data_dir = properties.get("data_dir");
-    myp_archive_loader_ = new MYPArchiveLoader( fsystem_ );
+    myp_archive_loader_ = new io::CMYPArchiveLoader( fsystem_ );
     fsystem_->addArchiveLoader( myp_archive_loader_ ); 
 
     logger_->log("Loading art.myp", irr::ELL_INFORMATION);
@@ -114,13 +115,13 @@ namespace owc {
 
     logger_->log("Loading terrain", irr::ELL_INFORMATION);
     scene::ITerrainSceneNode* terrain = smgr_->addTerrainSceneNode(
-        //"zones/zone031/offset.pcx",
-        "zones/zones.dat",
+        "zones/zone130/offset.pcx",
+        "zones/zone130/terrain.pcx",
         0,                  
         -1,                 
         core::vector3df(0.0f, 0.f, 0.f),     // position
         core::vector3df(0.0f, 0.f, 0.f),     // rotation
-        core::vector3df(1.0f, 4.0f, 1.0f),  // scale
+        core::vector3df(64.0f, 64.0f, 64.0f),  // scale
         video::SColor ( 255, 255, 255, 255 ),   // vertexColor
         3,                  
         scene::ETPS_17,             
@@ -131,7 +132,7 @@ namespace owc {
     return 0;
   }
 
-  int OWClient::free() {
+  u32 OWClient::free() {
 
     device_->drop();
     delete myp_archive_loader_;
@@ -139,7 +140,7 @@ namespace owc {
     return 0;
   }
 
-  int OWClient::run() {
+  u32 OWClient::run() {
 
 /*    std::thread t([ properties ] () mutable {
         char* token;

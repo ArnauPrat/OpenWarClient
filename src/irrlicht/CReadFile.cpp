@@ -3,6 +3,7 @@
 // For conditions of distribution and use, see copyright notice in irrlicht.h
 
 #include "CReadFile.h"
+#include "os.h"
 
 namespace irr
 {
@@ -55,6 +56,20 @@ bool CReadFile::seek(s64 finalPos, bool relativeMovement)
 long CReadFile::getSize() const
 {
 	return FileSize;
+}
+
+
+//! return The number of characters read. */
+u32 CReadFile::readLine( core::stringc* line ) {
+
+	if (!isOpen())
+		return 0;
+  int c = 0;
+  (*line) = "";
+  while ( ((c = fgetc(File)) != EOF) && (c != '\n') ) {
+    line->append(c);
+  }
+  return line->size();
 }
 
 

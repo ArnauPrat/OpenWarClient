@@ -22,8 +22,8 @@ SET( OPENWARCLIENT_SOURCE_FILES ./main.cpp
                                 ./OWClient.cpp
                                 ./login_sequence.cpp
                                 ./core/marshalling.cpp
-                                ./io/Properties.cpp
                                 ./network/NetworkSocket.cpp
+                                ./world/CZone.cpp
   )
 
 
