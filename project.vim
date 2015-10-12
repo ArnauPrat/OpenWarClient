@@ -1,5 +1,5 @@
 
-cd /home/aprat/projects/personal/OpenWarClient/build
+cd /home/aprat/projects/games/openwarclient/build
 let g:NERDTreeBookmarksFile = '.NERDTreeBookmarks'
 let g:ctrlp_working_path_mode = 'r'
 "let g:clang_compilation_database = '/home/aprat/projects/LDBCpp/trunk/build/'
