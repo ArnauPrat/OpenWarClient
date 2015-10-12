@@ -333,9 +333,8 @@ namespace scene
 				vertex.Normal.set(0.0f, 1.0f, 0.0f);
 				vertex.Color = vertexColor;
 				vertex.Pos.X = fx;
-				vertex.Pos.Y = (f32) (baseHeightMap->getPixel(TerrainData.Size-x-1,z).getLightness()*248.0f/8.0f + 
-                       (f32) offsetHeightMap->getPixel(TerrainData.Size-x-1,z).getLightness());
-        //vertex.Pos.Y += 248.0f;
+				vertex.Pos.Y = (f32) (baseHeightMap->getPixel(TerrainData.Size-x-1,z).getLightness()*248.0f + 
+                       (f32) offsetHeightMap->getPixel(TerrainData.Size-x-1,z).getLightness()*8.0f);
 				vertex.Pos.Z = fz;
 
 				vertex.TCoords.X = vertex.TCoords2.X = 1.f-fx2;
