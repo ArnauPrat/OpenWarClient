@@ -255,8 +255,9 @@ namespace scene
 			s32 maxLOD=4, E_TERRAIN_PATCH_SIZE patchSize=ETPS_17,s32 smoothFactor=0,
 			bool addAlsoIfHeightmapEmpty = false);
 
+
 		//! Adds a terrain scene node to the scene graph.
-		virtual ITerrainSceneNode* addTerrainSceneNode(
+		virtual ISplatterTerrainSceneNode* addSplatterTerrainSceneNode(
 			const io::path& baseHeightMapFileName,
 			const io::path& offsetHeightMapFileName,
 			ISceneNode* parent=0, s32 id=-1,
@@ -269,25 +270,27 @@ namespace scene
 
 		//! Adds a terrain scene node to the scene graph.
 		virtual ITerrainSceneNode* addTerrainSceneNode(
-			io::IReadFile* heightMap,
+			io::IReadFile* heightMapFile,
 			ISceneNode* parent=0, s32 id=-1,
 			const core::vector3df& position = core::vector3df(0.0f,0.0f,0.0f),
 			const core::vector3df& rotation = core::vector3df(0.0f,0.0f,0.0f),
 			const core::vector3df& scale = core::vector3df(1.0f,1.0f,1.0f),
 			video::SColor vertexColor = video::SColor(255,255,255,255),
-			s32 maxLOD=4, E_TERRAIN_PATCH_SIZE patchSize=ETPS_17,s32 smoothFactor=0,
-			bool addAlsoIfHeightmapEmpty=false);
+			s32 maxLOD=5, E_TERRAIN_PATCH_SIZE patchSize=ETPS_17, s32 smoothFactor=0,
+			bool addAlsoIfHeightmapEmpty = false);
 
-		virtual ITerrainSceneNode* addTerrainSceneNode(
-			io::IReadFile* baseHeightMap,
-			io::IReadFile* offsetHeightMap,
-			ISceneNode* parent=0, s32 id=-1,
+
+
+		virtual ISplatterTerrainSceneNode* addSplatterTerrainSceneNode(
+			io::IReadFile* baseHeightMapFile,
+      io::IReadFile* offsetHeightMapFile,
+				ISceneNode* parent=0, s32 id=-1,
 			const core::vector3df& position = core::vector3df(0.0f,0.0f,0.0f),
 			const core::vector3df& rotation = core::vector3df(0.0f,0.0f,0.0f),
 			const core::vector3df& scale = core::vector3df(1.0f,1.0f,1.0f),
 			video::SColor vertexColor = video::SColor(255,255,255,255),
-			s32 maxLOD=4, E_TERRAIN_PATCH_SIZE patchSize=ETPS_17,s32 smoothFactor=0,
-			bool addAlsoIfHeightmapEmpty=false);
+			s32 maxLOD=5, E_TERRAIN_PATCH_SIZE patchSize=ETPS_17, s32 smoothFactor=0,
+			bool addAlsoIfHeightmapEmpty = false);
 
 
 		//! Adds a dummy transformation scene node to the scene graph.

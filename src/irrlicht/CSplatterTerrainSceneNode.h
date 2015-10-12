@@ -6,10 +6,10 @@
 // developed by Spintz. He made it available for Irrlicht and allowed it to be
 // distributed under this licence. I only modified some parts. A lot of thanks go to him.
 
-#ifndef __C_TERRAIN_SCENE_NODE_H__
-#define __C_TERRAIN_SCENE_NODE_H__
+#ifndef __C_SPLATTER_TERRAIN_SCENE_NODE_H__
+#define __C_SPLATTER_TERRAIN_SCENE_NODE_H__
 
-#include "ITerrainSceneNode.h"
+#include "ISplatterTerrainSceneNode.h"
 #include "IDynamicMeshBuffer.h"
 #include "path.h"
 
@@ -26,7 +26,7 @@ namespace scene
 	class ITextSceneNode;
 
 	//! A scene node for displaying terrain using the geo mip map algorithm.
-	class CTerrainSceneNode : public ITerrainSceneNode
+	class CSplatterTerrainSceneNode : public ISplatterTerrainSceneNode
 	{
 	public:
 
@@ -42,16 +42,20 @@ namespace scene
 		//! \param scale: The scale factor for the terrain.  If you're using a heightmap of size 128x128 and would like
 		//! your terrain to be 12800x12800 in game units, then use a scale factor of ( core::vector ( 100.0f, 100.0f, 100.0f ).
 		//! If you use a Y scaling factor of 0.0f, then your terrain will be flat.
-		CTerrainSceneNode(ISceneNode* parent, ISceneManager* mgr, io::IFileSystem* fs, s32 id,
+		CSplatterTerrainSceneNode(ISceneNode* parent, ISceneManager* mgr, io::IFileSystem* fs, s32 id,
 			s32 maxLOD = 4, E_TERRAIN_PATCH_SIZE patchSize = ETPS_17,
 			const core::vector3df& position = core::vector3df(0.0f, 0.0f, 0.0f),
 			const core::vector3df& rotation = core::vector3df(0.0f, 0.0f, 0.0f),
 			const core::vector3df& scale = core::vector3df(1.0f, 1.0f, 1.0f));
 
-		virtual ~CTerrainSceneNode();
+		virtual ~CSplatterTerrainSceneNode();
 
 		//! Initializes the terrain data.  Loads the vertices from the heightMapFile.
 		virtual bool loadHeightMap(io::IReadFile* file,
+			video::SColor vertexColor = video::SColor ( 255, 255, 255, 255 ), s32 smoothFactor = 0 );
+
+    //! Initializes the terrain data. Loads the vertices from two heightMapFiles representing a base and an offset.
+		virtual bool loadHeightMap(io::IReadFile* baseFile, io::IReadFile* offsetFile,
 			video::SColor vertexColor = video::SColor ( 255, 255, 255, 255 ), s32 smoothFactor = 0 );
 
 		//! Initializes the terrain data.  Loads the vertices from the heightMapFile.
@@ -217,7 +221,7 @@ namespace scene
 				ISceneManager* newManager);
 
 	private:
-		friend class CTerrainTriangleSelector;
+		friend class CSplatterTerrainTriangleSelector;
 
 		struct SPatch
 		{

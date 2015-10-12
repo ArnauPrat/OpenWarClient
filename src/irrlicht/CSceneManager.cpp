@@ -146,6 +146,7 @@
 #include "CDummyTransformationSceneNode.h"
 #include "CWaterSurfaceSceneNode.h"
 #include "CTerrainSceneNode.h"
+#include "CSplatterTerrainSceneNode.h"
 #include "CEmptySceneNode.h"
 #include "CTextSceneNode.h"
 #include "CQuake3ShaderSceneNode.h"
@@ -872,7 +873,7 @@ ITerrainSceneNode* CSceneManager::addTerrainSceneNode(
 }
 
 //! Adds a terrain scene node to the scene graph.
-ITerrainSceneNode* CSceneManager::addTerrainSceneNode(
+ISplatterTerrainSceneNode* CSceneManager::addSplatterTerrainSceneNode(
 	const io::path& baseHeightMapFileName,
 	const io::path& offsetHeightMapFileName,
 	ISceneNode* parent, s32 id,
@@ -907,7 +908,7 @@ ITerrainSceneNode* CSceneManager::addTerrainSceneNode(
 		return 0;
 	}
 
-	ITerrainSceneNode* terrain = addTerrainSceneNode(baseFile, offsetFile, parent, id,
+	ISplatterTerrainSceneNode* terrain = addSplatterTerrainSceneNode(baseFile, offsetFile, parent, id,
 		position, rotation, scale, vertexColor, maxLOD, patchSize,
 		smoothFactor, addAlsoIfHeightmapEmpty);
 
@@ -959,7 +960,7 @@ ITerrainSceneNode* CSceneManager::addTerrainSceneNode(
 }
 
 //! Adds a terrain scene node to the scene graph.
-ITerrainSceneNode* CSceneManager::addTerrainSceneNode(
+ISplatterTerrainSceneNode* CSceneManager::addSplatterTerrainSceneNode(
 	io::IReadFile* baseHeightMapFile,
 	io::IReadFile* offsetHeightMapFile,
 	ISceneNode* parent, s32 id,
@@ -970,6 +971,7 @@ ITerrainSceneNode* CSceneManager::addTerrainSceneNode(
 	s32 maxLOD, E_TERRAIN_PATCH_SIZE patchSize,
 	s32 smoothFactor,
 	bool addAlsoIfHeightmapEmpty)
+
 {
 	if (!parent)
 		parent = this;
@@ -980,7 +982,7 @@ ITerrainSceneNode* CSceneManager::addTerrainSceneNode(
 		return 0;
 	}
 
-	CTerrainSceneNode* node = new CTerrainSceneNode(parent, this, FileSystem, id,
+	CSplatterTerrainSceneNode* node = new CSplatterTerrainSceneNode(parent, this, FileSystem, id,
 		maxLOD, patchSize, position, rotation, scale);
 
 	if (!node->loadHeightMap(baseHeightMapFile, offsetHeightMapFile, vertexColor, smoothFactor))

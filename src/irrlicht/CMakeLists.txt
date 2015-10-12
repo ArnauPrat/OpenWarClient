@@ -111,7 +111,9 @@ SET( IRROBJ  ./CBillboardSceneNode.cpp
   ./CSkyBoxSceneNode.cpp
   ./CSkyDomeSceneNode.cpp
   ./CTerrainSceneNode.cpp
+  ./CSplatterTerrainSceneNode.cpp
   ./CTerrainTriangleSelector.cpp
+  ./CSplatterTerrainTriangleSelector.cpp
   ./CVolumeLightSceneNode.cpp
   ./CCubeSceneNode.cpp
   ./CSphereSceneNode.cpp

@@ -120,6 +120,7 @@ namespace scene
 	class ISceneNodeFactory;
 	class ISceneUserDataSerializer;
 	class ITerrainSceneNode;
+	class ISplatterTerrainSceneNode;
 	class ITextSceneNode;
 	class ITriangleSelector;
 	class IVolumeLightSceneNode;
@@ -937,7 +938,7 @@ namespace scene
 		heightmap could not be loaded. The returned pointer should
 		not be dropped. See IReferenceCounted::drop() for more
 		information. */
-		virtual ITerrainSceneNode* addTerrainSceneNode(
+		virtual ISplatterTerrainSceneNode* addSplatterTerrainSceneNode(
 			const io::path& baseHeightMapFileName,
       const io::path& offsetHeightMapFileName,
 				ISceneNode* parent=0, s32 id=-1,
@@ -985,6 +986,79 @@ namespace scene
 			video::SColor vertexColor = video::SColor(255,255,255,255),
 			s32 maxLOD=5, E_TERRAIN_PATCH_SIZE patchSize=ETPS_17, s32 smoothFactor=0,
 			bool addAlsoIfHeightmapEmpty = false) = 0;
+
+		//! Adds a terrain scene node to the scene graph.
+		/** This node implements is a simple terrain renderer which uses
+		a technique known as geo mip mapping
+		for reducing the detail of triangle blocks which are far away.
+		The code for the TerrainSceneNode is based on the terrain
+		renderer by Soconne and the GeoMipMapSceneNode developed by
+		Spintz. They made their code available for Irrlicht and allowed
+		it to be distributed under this licence. I only modified some
+		parts. A lot of thanks go to them.
+
+		This scene node is capable of loading terrains and updating
+		the indices at runtime to enable viewing very large terrains
+		very quickly. It uses a CLOD (Continuous Level of Detail)
+		algorithm which updates the indices for each patch based on
+		a LOD (Level of Detail) which is determined based on a patch's
+		distance from the camera.
+
+		The patch size of the terrain must always be a size of 2^N+1,
+		i.e. 8+1(9), 16+1(17), etc.
+		The MaxLOD available is directly dependent on the patch size
+		of the terrain. LOD 0 contains all of the indices to draw all
+		the triangles at the max detail for a patch. As each LOD goes
+		up by 1 the step taken, in generating indices increases by
+		-2^LOD, so for LOD 1, the step taken is 2, for LOD 2, the step
+		taken is 4, LOD 3 - 8, etc. The step can be no larger than
+		the size of the patch, so having a LOD of 8, with a patch size
+		of 17, is asking the algoritm to generate indices every 2^8 (
+		256 ) vertices, which is not possible with a patch size of 17.
+		The maximum LOD for a patch size of 17 is 2^4 ( 16 ). So,
+		with a MaxLOD of 5, you'll have LOD 0 ( full detail ), LOD 1 (
+		every 2 vertices ), LOD 2 ( every 4 vertices ), LOD 3 ( every
+		8 vertices ) and LOD 4 ( every 16 vertices ). This method is the same as
+    addTerrainScenNode, with the difference that it requires to heightmaps:
+    one containing the base and the others containing the offset of the heights. Both
+    files must be the same size in pixels. 
+		\param baseHeightMapFileName: The name of the file on disk, to read the base vertex data from. This should
+		be a gray scale bitmap.
+		\param offsetHeightMapFileName: The name of the file on disk, to read offset vertex data from. This should
+		be a gray scale bitmap.
+		\param parent: Parent of the scene node. Can be 0 if no parent.
+		\param id: Id of the node. This id can be used to identify the scene node.
+		\param position: The absolute position of this node.
+		\param rotation: The absolute rotation of this node. ( NOT YET IMPLEMENTED )
+		\param scale: The scale factor for the terrain. If you're
+		using a heightmap of size 129x129 and would like your terrain
+		to be 12900x12900 in game units, then use a scale factor of (
+		core::vector ( 100.0f, 100.0f, 100.0f ). If you use a Y
+		scaling factor of 0.0f, then your terrain will be flat.
+		\param vertexColor: The default color of all the vertices. If no texture is associated
+		with the scene node, then all vertices will be this color. Defaults to white.
+		\param maxLOD: The maximum LOD (level of detail) for the node. Only change if you
+		know what you are doing, this might lead to strange behavior.
+		\param patchSize: patch size of the terrain. Only change if you
+		know what you are doing, this might lead to strange behavior.
+		\param smoothFactor: The number of times the vertices are smoothed.
+		\param addAlsoIfHeightmapEmpty: Add terrain node even with empty heightmap.
+		\return Pointer to the created scene node. Can be null
+		if the terrain could not be created, for example because the
+		heightmap could not be loaded. The returned pointer should
+		not be dropped. See IReferenceCounted::drop() for more
+		information. */
+		virtual ISplatterTerrainSceneNode* addSplatterTerrainSceneNode(
+			io::IReadFile* baseHeightMapFile,
+      io::IReadFile* offsetHeightMapFile,
+				ISceneNode* parent=0, s32 id=-1,
+			const core::vector3df& position = core::vector3df(0.0f,0.0f,0.0f),
+			const core::vector3df& rotation = core::vector3df(0.0f,0.0f,0.0f),
+			const core::vector3df& scale = core::vector3df(1.0f,1.0f,1.0f),
+			video::SColor vertexColor = video::SColor(255,255,255,255),
+			s32 maxLOD=5, E_TERRAIN_PATCH_SIZE patchSize=ETPS_17, s32 smoothFactor=0,
+			bool addAlsoIfHeightmapEmpty = false) = 0;
+
 
 		//! Adds a quake3 scene node to the scene graph.
 		/** A Quake3 Scene renders multiple meshes for a specific HighLanguage Shader (Quake3 Style )

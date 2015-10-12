@@ -34,7 +34,7 @@ namespace owc {
       Properties.load(sectorFile);
       sectorFile->drop();
 
-      scene::ITerrainSceneNode* terrain = SceneManager->addTerrainSceneNode(
+      scene::ISplatterTerrainSceneNode* terrain = SceneManager->addSplatterTerrainSceneNode(
           offsetFileName,
           terrainFileName,
           0,                  

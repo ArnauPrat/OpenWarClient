@@ -7,8 +7,8 @@
 // code available for Irrlicht and allowed it to be distributed under this
 // licence. I only modified some parts. A lot of thanks go to them.
 
-#ifndef __I_TERRAIN_SCENE_NODE_H__
-#define __I_TERRAIN_SCENE_NODE_H__
+#ifndef __I_SPLATTER_TERRAIN_SCENE_NODE_H__
+#define __I_SPLATTER_TERRAIN_SCENE_NODE_H__
 
 #include "ETerrainElements.h"
 #include "ISceneNode.h"
@@ -46,11 +46,11 @@ namespace scene
 	 * size of 17 is 2^4 ( 16 ). So, with a MaxLOD of 5, you'll have LOD 0 ( full detail ), LOD 1 ( every
 	 * 2 vertices ), LOD 2 ( every 4 vertices ), LOD 3 ( every 8 vertices ) and LOD 4 ( every 16 vertices ).
 	 **/
-	class ITerrainSceneNode : public ISceneNode
+	class ISplatterTerrainSceneNode : public ISceneNode
 	{
 	public:
 		//! Constructor
-		ITerrainSceneNode(ISceneNode* parent, ISceneManager* mgr, s32 id,
+		ISplatterTerrainSceneNode(ISceneNode* parent, ISceneManager* mgr, s32 id,
 			const core::vector3df& position = core::vector3df(0.0f, 0.0f, 0.0f),
 			const core::vector3df& rotation = core::vector3df(0.0f, 0.0f, 0.0f),
 			const core::vector3df& scale = core::vector3df(1.0f, 1.0f, 1.0f) )
@@ -156,6 +156,15 @@ namespace scene
 			video::SColor vertexColor=video::SColor(255,255,255,255),
 			s32 smoothFactor=0) =0;
 
+		//! Initializes the terrain data.  Loads the vertices from two heightMapFiles representing a base and an offset.
+		/** The files must contain a loadable image of the heightmap. The heightmaps
+		must be square.
+		\param baseFile The file to read the base image from. File is not rewinded.
+		\param offsetFile The file to read the offset image from. File is not rewinded.
+		\param vertexColor Color of all vertices.
+		\param smoothFactor Number of smoothing passes. */
+		virtual bool loadHeightMap(io::IReadFile* baseFile, io::IReadFile* offsetFile,
+			video::SColor vertexColor = video::SColor ( 255, 255, 255, 255 ), s32 smoothFactor = 0 ) = 0;
 
 		//! Initializes the terrain data.  Loads the vertices from the heightMapFile.
 		/** The data is interpreted as (signed) integers of the given bit size or
