@@ -36,7 +36,7 @@ public:
 	virtual ~CSplatterTerrainTriangleSelector();
 
 	//! Clears and sets triangle data
-	virtual void setTriangleData (ISplatterTerrainSceneNode* node, s32 LOD);
+	virtual void setTriangleData (ISplatterTerrainSceneNode* node, u32 x, u32 y, s32 LOD);
 
 	//! Gets all triangles.
 	void getTriangles(core::triangle3df* triangles, s32 arraySize, s32& outTriangleCount,

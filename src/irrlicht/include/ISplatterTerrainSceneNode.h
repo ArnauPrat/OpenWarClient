@@ -66,7 +66,7 @@ namespace scene
 
 		//! Get the number of indices currently in the meshbuffer
 		/** \return The index count. */
-		virtual u32 getIndexCount() const =0;
+		virtual u32 getIndexCount( u32 x, u32 y ) const = 0;
 
 		//! Get pointer to the mesh
 		/** \return Pointer to the mesh. */

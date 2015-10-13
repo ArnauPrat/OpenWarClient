@@ -20,7 +20,8 @@ CSplatterTerrainTriangleSelector::CSplatterTerrainTriangleSelector ( ISplatterTe
 	setDebugName ("CSplatterTerrainTriangleSelector");
 	#endif
 
-	setTriangleData(node, LOD);
+  //TODO: ADAPT TRIANGLE SELECTOR TO MULTIPLE SEPARATE PATCHES
+	setTriangleData(node, 0, 0, LOD);
 }
 
 
@@ -32,10 +33,10 @@ CSplatterTerrainTriangleSelector::~CSplatterTerrainTriangleSelector()
 
 
 //! Clears and sets triangle data
-void CSplatterTerrainTriangleSelector::setTriangleData(ISplatterTerrainSceneNode* node, s32 LOD)
+void CSplatterTerrainTriangleSelector::setTriangleData(ISplatterTerrainSceneNode* node, u32 x, u32 y, s32 LOD)
 {
 	// Get pointer to the GeoMipMaps vertices
-	const video::S3DVertex2TCoords* vertices = static_cast<const video::S3DVertex2TCoords*>(node->getRenderBuffer()->getVertices());
+	const video::S3DVertex2TCoords* vertices = static_cast<const video::S3DVertex2TCoords*>(node->getRenderBuffer(x,y)->getVertices());
 
 	// Clear current data
 	const s32 count = (static_cast<CSplatterTerrainSceneNode*>(node))->TerrainData.PatchCount;

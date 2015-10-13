@@ -11,7 +11,7 @@
 #define __C_SPLATTER_TERRAIN_SCENE_NODE_H__
 
 #include "ISplatterTerrainSceneNode.h"
-#include "IDynamicMeshBuffer.h"
+#include "CDynamicMeshBuffer.h"
 #include "path.h"
 
 namespace irr
@@ -126,7 +126,7 @@ namespace scene
 		virtual const core::aabbox3d<f32>& getBoundingBox(s32 patchX, s32 patchZ) const;
 
 		//! Return the number of indices currently used to draw the scene node.
-		virtual u32 getIndexCount() const { return IndicesToRender; }
+		virtual u32 getIndexCount( u32 x, u32 y ) const { return IndicesToRender[x*TerrainData.PatchCount + y]; }
 
 		//! Returns the mesh
 		virtual IMesh* getMesh();
@@ -294,10 +294,10 @@ namespace scene
 		STerrainData TerrainData;
 		SMesh* Mesh;
 
-		IDynamicMeshBuffer** RenderBuffer;
+		CDynamicMeshBuffer** RenderBuffer;
 
-		u32 VerticesToRender;
-		u32 IndicesToRender;
+		u32* VerticesToRender;
+		u32* IndicesToRender;
 
 		bool DynamicSelectorUpdate;
 		bool OverrideDistanceThreshold;

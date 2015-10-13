@@ -1,3 +1,4 @@
+//
 // Copyright (C) 2002-2012 Nikolaus Gebhardt
 // This file is part of the "Irrlicht Engine".
 // For conditions of distribution and use, see copyright notice in irrlicht.h
@@ -73,6 +74,12 @@ namespace scene
 
 		if (Mesh)
 			Mesh->drop();
+
+    if(IndicesToRender)
+      delete [] IndicesToRender;
+
+    if(VerticesToRender)
+      delete [] VerticesToRender;
 
 	}
 
@@ -253,7 +260,10 @@ namespace scene
 	{
 		TerrainData.Scale = scale;
 		applyTransformation();
-		calculateNormals(RenderBuffer);
+    u32 numPatches = TerrainData.PatchCount*TerrainData.PatchCount;
+    for (u32 i = 0; i < numPatches; ++i) {
+      calculateNormals(RenderBuffer[i]);
+    }
 		ForceRecalculation = true;
 	}
 
@@ -299,19 +309,37 @@ namespace scene
 		rotMatrix.setRotationDegrees(TerrainData.Rotation);
 
 		const s32 vtxCount = Mesh->getMeshBuffer(0)->getVertexCount();
-		for (s32 i = 0; i < vtxCount; ++i)
-		{
-			RenderBuffer->getVertexBuffer()[i].Pos = Mesh->getMeshBuffer(0)->getPosition(i) * TerrainData.Scale + TerrainData.Position;
+    for (s32 x = 0; x < TerrainData.PatchCount; ++x)
+    {
+      for (s32 z = 0; z < TerrainData.PatchCount; ++z)
+      {
+        const s32 xstart = x*TerrainData.CalcPatchSize;
+        const s32 xend = xstart+TerrainData.CalcPatchSize;
+        const s32 zstart = z*TerrainData.CalcPatchSize;
+        const s32 zend = zstart+TerrainData.CalcPatchSize;
 
-			RenderBuffer->getVertexBuffer()[i].Pos -= TerrainData.RotationPivot;
-			rotMatrix.inverseRotateVect(RenderBuffer->getVertexBuffer()[i].Pos);
-			RenderBuffer->getVertexBuffer()[i].Pos += TerrainData.RotationPivot;
-		}
+        // Copy the data to the renderBuffers, after the normals have been calculated.
+        for (s32 xx = xstart; xx < xend ; ++xx)
+        {
+          for (s32 zz = zstart; zz < zend ; ++zz)
+          {
+
+            RenderBuffer[x*TerrainData.PatchCount+z]->getVertexBuffer()[(xx-xstart)*TerrainData.CalcPatchSize+(zz-zstart)].Pos = Mesh->getMeshBuffer(0)->getPosition(xx*vtxCount + zz) * TerrainData.Scale + TerrainData.Position;
+
+            RenderBuffer[x*TerrainData.PatchCount+z]->getVertexBuffer()[(xx-xstart)*TerrainData.CalcPatchSize+(zz-zstart)].Pos -= TerrainData.RotationPivot;
+            rotMatrix.inverseRotateVect(RenderBuffer[x*TerrainData.PatchCount+z]->getVertexBuffer()[(xx-xstart)*TerrainData.CalcPatchSize+(zz-zstart)].Pos);
+            RenderBuffer[x*TerrainData.PatchCount+z]->getVertexBuffer()[(xx-xstart)*TerrainData.CalcPatchSize+(zz-zstart)].Pos += TerrainData.RotationPivot;
+          }
+        }
+      }
+    }
 
 		calculateDistanceThresholds(true);
 		calculatePatchData();
-
-		RenderBuffer->setDirty(EBT_VERTEX);
+    u32 numPatches = TerrainData.PatchCount*TerrainData.PatchCount;
+    for (u32 i = 0; i < numPatches; ++i) {
+      RenderBuffer[i]->setDirty(EBT_VERTEX);
+    }
 	}
 
 
@@ -418,9 +446,6 @@ namespace scene
 
 	void CSplatterTerrainSceneNode::preRenderIndicesCalculations()
 	{
-		scene::IIndexBuffer& indexBuffer = RenderBuffer->getIndexBuffer();
-		IndicesToRender = 0;
-		indexBuffer.set_used(0);
 
 		s32 index = 0;
 		// Then generate the indices for all patches that are visible.
@@ -432,6 +457,10 @@ namespace scene
 				{
 					s32 x = 0;
 					s32 z = 0;
+
+          scene::IIndexBuffer& indexBuffer = RenderBuffer[i*TerrainData.PatchCount+j]->getIndexBuffer();
+          IndicesToRender = 0;
+          indexBuffer.set_used(0);
 
 					// calculate the step we take this patch, based on the patches current LOD
 					const s32 step = 1 << TerrainData.Patches[index].CurrentLOD;
@@ -464,15 +493,17 @@ namespace scene
 					}
 				}
 				++index;
+        RenderBuffer[i*TerrainData.PatchCount+j]->setDirty(EBT_INDEX);
 			}
+
 		}
 
-		RenderBuffer->setDirty(EBT_INDEX);
 
 		if (DynamicSelectorUpdate && TriangleSelector)
 		{
 			CSplatterTerrainTriangleSelector* selector = (CSplatterTerrainTriangleSelector*)TriangleSelector;
-			selector->setTriangleData(this, -1);
+      //TODO: ADAPT TRIANGLE SELECTOR
+			//selector->setTriangleData(this, -1);
 		}
 	}
 
@@ -491,12 +522,15 @@ namespace scene
 		driver->setTransform (video::ETS_WORLD, core::IdentityMatrix);
 		driver->setMaterial(Mesh->getMeshBuffer(0)->getMaterial());
 
-		RenderBuffer->getIndexBuffer().set_used(IndicesToRender);
+    u32 numPatches = TerrainData.PatchCount*TerrainData.PatchCount;
+    for (u32 i = 0; i < numPatches; ++i) {
+        RenderBuffer[i]->getIndexBuffer().set_used(IndicesToRender[i]);
 
-		// For use with geomorphing
-		driver->drawMeshBuffer(RenderBuffer);
+        // For use with geomorphing
+        driver->drawMeshBuffer(RenderBuffer[i]);
+        RenderBuffer[i]->getIndexBuffer().set_used(RenderBuffer[i]->getIndexBuffer().allocated_size());
+    }
 
-		RenderBuffer->getIndexBuffer().set_used(RenderBuffer->getIndexBuffer().allocated_size());
 
 		// for debug purposes only:
 		if (DebugDataVisible)
@@ -523,8 +557,10 @@ namespace scene
 				// draw normals
 				const f32 debugNormalLength = SceneManager->getParameters()->getAttributeAsFloat(DEBUG_NORMAL_LENGTH);
 				const video::SColor debugNormalColor = SceneManager->getParameters()->getAttributeAsColor(DEBUG_NORMAL_COLOR);
-				driver->drawMeshBufferNormals(RenderBuffer, debugNormalLength, debugNormalColor);
-			}
+        for (u32 i = 0; i < numPatches; ++i) {
+          driver->drawMeshBufferNormals(RenderBuffer[i], debugNormalLength, debugNormalColor);
+        }
+      }
 
 			driver->setTransform(video::ETS_WORLD, AbsoluteTransformation);
 
@@ -574,7 +610,7 @@ namespace scene
 		for (u32 n=0; n<numVertices; ++n)
 			mb.getVertexBuffer().push_back(vertices[n]);
 
-		mb.getIndexBuffer().setType(RenderBuffer->getIndexBuffer().getType());
+		mb.getIndexBuffer().setType(RenderBuffer[0]->getIndexBuffer().getType());
 
 		// calculate the step we take for all patches, since LOD is the same
 		const s32 step = 1 << LOD;
@@ -591,10 +627,16 @@ namespace scene
 				// Loop through patch and generate indices
 				while (z < TerrainData.CalcPatchSize)
 				{
-					const s32 index11 = getIndex(j, i, index, x, z);
-					const s32 index21 = getIndex(j, i, index, x + step, z);
-					const s32 index12 = getIndex(j, i, index, x, z + step);
-					const s32 index22 = getIndex(j, i, index, x + step, z + step);
+					s32 index11 = getIndex(j, i, index, x, z);
+					s32 index21 = getIndex(j, i, index, x + step, z);
+					s32 index12 = getIndex(j, i, index, x, z + step);
+					s32 index22 = getIndex(j, i, index, x + step, z + step);
+
+          // Remapping indices from patch space to global mesh space
+          index11=((index11/TerrainData.CalcPatchSize)+(TerrainData.CalcPatchSize*i))*TerrainData.Size + ((index11%TerrainData.CalcPatchSize)) + (TerrainData.CalcPatchSize*j);
+          index21=((index21/TerrainData.CalcPatchSize)+(TerrainData.CalcPatchSize*i))*TerrainData.Size + ((index21%TerrainData.CalcPatchSize)) + (TerrainData.CalcPatchSize*j);
+          index12=((index12/TerrainData.CalcPatchSize)+(TerrainData.CalcPatchSize*i))*TerrainData.Size + ((index12%TerrainData.CalcPatchSize)) + (TerrainData.CalcPatchSize*j);
+          index22=((index22/TerrainData.CalcPatchSize)+(TerrainData.CalcPatchSize*i))*TerrainData.Size + ((index22%TerrainData.CalcPatchSize)) + (TerrainData.CalcPatchSize*j);
 
 					mb.getIndexBuffer().push_back(index12);
 					mb.getIndexBuffer().push_back(index11);
@@ -743,7 +785,7 @@ namespace scene
 	//! specifying the relation between world space and texture coordinate space.
 	void CSplatterTerrainSceneNode::scaleTexture(f32 resolution, f32 resolution2)
 	{
-		TCoordScale1 = resolution;
+	/*	TCoordScale1 = resolution;
 		TCoordScale2 = resolution2;
 
 		const f32 resBySize = resolution / (f32)(TerrainData.Size-1);
@@ -782,6 +824,7 @@ namespace scene
 		}
 
 		RenderBuffer->setDirty(EBT_VERTEX);
+    */
 	}
 
 
@@ -837,8 +880,9 @@ namespace scene
 		if (vX >= (u32)TerrainData.PatchSize)
 			vX = TerrainData.CalcPatchSize;
 
-		return (vZ + ((TerrainData.CalcPatchSize) * PatchZ)) * TerrainData.Size +
-			(vX + ((TerrainData.CalcPatchSize) * PatchX));
+		//return (vZ + ((TerrainData.CalcPatchSize) * PatchZ)) * TerrainData.Size +
+			//(vX + ((TerrainData.CalcPatchSize) * PatchX));
+		return (vZ ) * TerrainData.CalcPatchSize + vX;
 	}
 
 
@@ -1005,11 +1049,13 @@ namespace scene
 
     //! allocating render buffers for each patch
 		RenderBuffer = new CDynamicMeshBuffer*[numPatches];
-    for (int i = 0; i < numPatches ; ++i) {
+    IndicesToRender = new u32[numPatches];
+    VerticesToRender = new u32[numPatches];
+    for (u32 i = 0; i < numPatches ; ++i) {
       RenderBuffer[i] = new CDynamicMeshBuffer(video::EVT_2TCOORDS, video::EIT_16BIT);
       RenderBuffer[i]->setHardwareMappingHint(scene::EHM_STATIC, scene::EBT_VERTEX);
       RenderBuffer[i]->setHardwareMappingHint(scene::EHM_DYNAMIC, scene::EBT_INDEX);
-      RenderBuffer[i]->IMeshBuffer::getIndexType(mb->getIndexType());
+//      RenderBuffer[i]->IMeshBuffer::getIndexType(mb->getIndexType());
 
       //! copying the data from the mesh into each patch
       RenderBuffer[i]->getVertexBuffer().set_used(numVerticesPatch);
@@ -1027,9 +1073,9 @@ namespace scene
           const s32 zend = zstart+TerrainData.CalcPatchSize;
 
           // Copy the data to the renderBuffers, after the normals have been calculated.
-          for (u32 xx = xstart; xx < xend ; ++xx)
+          for (s32 xx = xstart; xx < xend ; ++xx)
           {
-            for (u32 zz = zstart; zz < zend ; ++zz)
+            for (s32 zz = zstart; zz < zend ; ++zz)
             {
               RenderBuffer[x*TerrainData.PatchCount+z]->getVertexBuffer()[(xx-xstart)*TerrainData.CalcPatchSize+(zz-zstart)] = mb->getVertexBuffer()[xx*numVertices + zz];
               RenderBuffer[x*TerrainData.PatchCount+z]->getVertexBuffer()[(xx-xstart)*TerrainData.CalcPatchSize+(zz-zstart)].Pos *= TerrainData.Scale;
@@ -1042,6 +1088,8 @@ namespace scene
               TerrainData.CalcPatchSize * TerrainData.CalcPatchSize * 6);
 
           RenderBuffer[x*TerrainData.PatchCount+z]->setDirty();
+          IndicesToRender[x*TerrainData.PatchCount+z] = 0;
+          VerticesToRender[x*TerrainData.PatchCount+z] = 0;
         }
       }
 
@@ -1054,7 +1102,7 @@ namespace scene
 	void CSplatterTerrainSceneNode::calculatePatchData()
 	{
 		// Reset the Terrains Bounding Box for re-calculation
-		TerrainData.BoundingBox.reset(RenderBuffer->getPosition(0));
+		TerrainData.BoundingBox.reset(RenderBuffer[0]->getPosition(0));
 
 		for (s32 x = 0; x < TerrainData.PatchCount; ++x)
 		{
@@ -1069,11 +1117,11 @@ namespace scene
 				const s32 zstart = z*TerrainData.CalcPatchSize;
 				const s32 zend = zstart+TerrainData.CalcPatchSize;
 				// For each patch, calculate the bounding box (mins and maxes)
-				patch.BoundingBox.reset(RenderBuffer->getPosition(xstart*TerrainData.Size + zstart));
+				patch.BoundingBox.reset(RenderBuffer[x*TerrainData.PatchCount+z]->getPosition(0));
 
-				for (s32 xx = xstart; xx <= xend; ++xx)
-					for (s32 zz = zstart; zz <= zend; ++zz)
-						patch.BoundingBox.addInternalPoint(RenderBuffer->getVertexBuffer()[xx * TerrainData.Size + zz].Pos);
+				for (s32 xx = 0; xx <= TerrainData.CalcPatchSize; ++xx)
+					for (s32 zz = 0; zz <= TerrainData.CalcPatchSize; ++zz)
+						patch.BoundingBox.addInternalPoint(RenderBuffer[x*TerrainData.PatchCount+z]->getVertexBuffer()[xx * TerrainData.CalcPatchSize + zz].Pos);
 
 				// Reconfigure the bounding box of the terrain as a whole
 				TerrainData.BoundingBox.addInternalBox(patch.BoundingBox);
@@ -1218,19 +1266,22 @@ namespace scene
 			io::SAttributeReadWriteOptions* options)
 	{
 		io::path newHeightmap = in->getAttributeAsString("Heightmap");
+    io::path secondaryHeightmap = in->getAttributeAsString("SecondaryHeightmap");
 		f32 tcoordScale1 = in->getAttributeAsFloat("TextureScale1");
 		f32 tcoordScale2 = in->getAttributeAsFloat("TextureScale2");
 		s32 smoothFactor = in->getAttributeAsInt("SmoothFactor");
 
 		// set possible new heightmap
 
-		if (newHeightmap.size() != 0 && newHeightmap != HeightmapFile)
+		if (newHeightmap.size() != 0 && secondaryHeightmap.size() != 0 && newHeightmap != HeightmapFile && secondaryHeightmap != SecondaryHeightmapFile )
 		{
-			io::IReadFile* file = FileSystem->createAndOpenFile(newHeightmap.c_str());
-			if (file)
+			io::IReadFile* file1 = FileSystem->createAndOpenFile(newHeightmap.c_str());
+			io::IReadFile* file2 = FileSystem->createAndOpenFile(secondaryHeightmap.c_str());
+			if (file1 && file2)
 			{
-				loadHeightMap(file, video::SColor(255,255,255,255), smoothFactor);
-				file->drop();
+				loadHeightMap(file1, file2,  video::SColor(255,255,255,255), smoothFactor);
+				file1->drop();
+				file2->drop();
 			}
 			else
 				os::Printer::log("could not open heightmap", newHeightmap.c_str());
@@ -1273,11 +1324,13 @@ namespace scene
 
 		// load file
 
-		io::IReadFile* file = FileSystem->createAndOpenFile(HeightmapFile.c_str());
-		if (file)
+		io::IReadFile* file1 = FileSystem->createAndOpenFile(HeightmapFile.c_str());
+		io::IReadFile* file2 = FileSystem->createAndOpenFile(SecondaryHeightmapFile.c_str());
+		if (file1 && file2)
 		{
-			nb->loadHeightMap(file, video::SColor(255,255,255,255), 0);
-			file->drop();
+			nb->loadHeightMap(file1, file2, video::SColor(255,255,255,255), 0);
+			file1->drop();
+			file2->drop();
 		}
 
 		// scale textures
@@ -1297,7 +1350,10 @@ namespace scene
 			}
 		}
 
-		nb->RenderBuffer->getMaterial() = RenderBuffer->getMaterial();
+    u32 numPatches = TerrainData.PatchCount*TerrainData.PatchCount;
+    for (u32 i = 0; i < numPatches; ++i) {
+      nb->RenderBuffer[i]->getMaterial() = RenderBuffer[i]->getMaterial();
+    }
 
 		// finish
 
