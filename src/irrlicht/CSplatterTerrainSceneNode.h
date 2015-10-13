@@ -132,7 +132,7 @@ namespace scene
 		virtual IMesh* getMesh();
 
 		//! Returns a pointer to the buffer used by the terrain (most users will not need this)
-		virtual IMeshBuffer* getRenderBuffer() { return RenderBuffer; }
+		virtual IMeshBuffer* getRenderBuffer( u32 x, u32 y ) { return RenderBuffer[x*TerrainData.PatchCount + y]; }
 
 		//! Gets the meshbuffer data based on a specified Level of Detail.
 		//! \param mb: A reference to an IDynamicMeshBuffer object

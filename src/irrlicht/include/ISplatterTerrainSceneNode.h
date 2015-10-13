@@ -73,7 +73,7 @@ namespace scene
 		virtual IMesh* getMesh() =0;
 
 		//! Get pointer to the buffer used by the terrain (most users will not need this)
-		virtual IMeshBuffer* getRenderBuffer() =0;
+		virtual IMeshBuffer* getRenderBuffer( u32 x, u32 y ) =0;
 
 
 		//! Gets the meshbuffer data based on a specified level of detail.
