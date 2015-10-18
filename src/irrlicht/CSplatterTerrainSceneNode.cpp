@@ -110,7 +110,12 @@ namespace scene
     if( baseHeightMap->getDimension() != offsetHeightMap->getDimension() ) {
       os::Printer::log("Unable to load terrain. Both heightmaps must have the same dimensions.");
     }
-		TerrainData.Size = baseHeightMap->getDimension().Width;
+		s32 imageSize = baseHeightMap->getDimension().Width;
+    if( (imageSize-1) % TerrainData.CalcPatchSize == 0 ) {
+      TerrainData.Size = imageSize; 
+    }  else {
+      TerrainData.Size = (imageSize-1) + (TerrainData.CalcPatchSize - ((imageSize-1) % TerrainData.CalcPatchSize)) + 1; 
+    }
 
 		switch (TerrainData.PatchSize)
 		{
@@ -150,7 +155,8 @@ namespace scene
 		// resize the vertex array for the mesh buffer one time (makes loading faster)
 		scene::CDynamicMeshBuffer *mb=0;
 
-		const u32 numVertices = TerrainData.Size * TerrainData.Size;
+		const u32 numVertices = imageSize * imageSize;
+		const u32 numRealVertices = TerrainData.Size * TerrainData.Size;
 		if (numVertices <= 65536)
 		{
 			//small enough for 16bit buffers
@@ -162,41 +168,73 @@ namespace scene
 			mb=new scene::CDynamicMeshBuffer(video::EVT_2TCOORDS, video::EIT_32BIT);
 		}
 
-		mb->getVertexBuffer().set_used(numVertices);
+		mb->getVertexBuffer().set_used(numRealVertices);
 
 		// Read the heightmap to get the vertex data
 		// Apply positions changes, scaling changes
-		const f32 tdSize = 1.0f/(f32)(TerrainData.Size-1);
 		s32 index = 0;
 		float fx=0.f;
-		float fx2=0.f;
-		for (s32 x = 0; x < TerrainData.Size; ++x)
+		for (s32 x = 0; x < imageSize; ++x)
 		{
 			float fz=0.f;
-			float fz2=0.f;
-			for (s32 z = 0; z < TerrainData.Size; ++z)
+			for (s32 z = 0; z < imageSize; ++z)
 			{
-				video::S3DVertex2TCoords& vertex= static_cast<video::S3DVertex2TCoords*>(mb->getVertexBuffer().pointer())[index++];
+				video::S3DVertex2TCoords& vertex= static_cast<video::S3DVertex2TCoords*>(mb->getVertexBuffer().pointer())[x*TerrainData.Size+z];
 				vertex.Normal.set(0.0f, 1.0f, 0.0f);
 				vertex.Color = vertexColor;
 				vertex.Pos.X = fx;
-				vertex.Pos.Y = (f32) (baseHeightMap->getPixel(TerrainData.Size-x-1,z).getLightness()*248.0f + 
-                       (f32) offsetHeightMap->getPixel(TerrainData.Size-x-1,z).getLightness()*8.0f);
+				/*vertex.Pos.Y = (f32) (baseHeightMap->getPixel(imageSize-x-1,z).getLightness()*248.0f  + 
+                       (f32) offsetHeightMap->getPixel(imageSize-x-1,z).getLightness()*8.0f);*/
+
+				vertex.Pos.Y = (f32) (baseHeightMap->getPixel(imageSize-x-1,z).getLightness());
         /*if(x == 0) {
           printf("%d %d %d %d\n", baseHeightMap->getPixel(TerrainData.Size-x-1,z).getRed(), baseHeightMap->getPixel(TerrainData.Size-x-1,z).getGreen(),
               baseHeightMap->getPixel(TerrainData.Size-x-1,z).getBlue(), baseHeightMap->getPixel(TerrainData.Size-x-1,z).getAlpha());
         }*/
 				vertex.Pos.Z = fz;
 
-				vertex.TCoords.X = vertex.TCoords2.X = 1.f-fx2;
-				vertex.TCoords.Y = vertex.TCoords2.Y = fz2;
+				vertex.TCoords.X = 0.0;
+				vertex.TCoords.Y = 0.0;
 
 				++fz;
-				fz2 += tdSize;
 			}
 			++fx;
-			fx2 += tdSize;
 		}
+
+    /*// Extending the edges to match the real size of the terrain along the x axis
+		for (s32 x = 0; x < imageSize; ++x)
+		{
+			for (s32 z = imageSize; z < TerrainData.Size; ++z)
+			{
+				video::S3DVertex2TCoords& prevVertex= static_cast<video::S3DVertex2TCoords*>(mb->getVertexBuffer().pointer())[x*TerrainData.Size+(z-1)];
+				video::S3DVertex2TCoords& vertex= static_cast<video::S3DVertex2TCoords*>(mb->getVertexBuffer().pointer())[x*TerrainData.Size+z];
+				vertex.Normal.set(0.0f, 1.0f, 0.0f);
+				vertex.Color = vertexColor;
+				vertex.Pos.X = prevVertex.Pos.X;
+				vertex.Pos.Y = prevVertex.Pos.Y;
+				vertex.Pos.Z = prevVertex.Pos.Z;
+				vertex.TCoords.X = prevVertex.TCoords.X; 
+				vertex.TCoords.Y = prevVertex.TCoords.Y;
+			}
+		}
+
+    // Extending the edges to match the real size of the terrain along the z axis
+		for (s32 x = imageSize; x < TerrainData.Size; ++x)
+		{
+			for (s32 z = 0; z < TerrainData.Size; ++z)
+			{
+				video::S3DVertex2TCoords& prevVertex= static_cast<video::S3DVertex2TCoords*>(mb->getVertexBuffer().pointer())[(x-1)*TerrainData.Size+z];
+				video::S3DVertex2TCoords& vertex= static_cast<video::S3DVertex2TCoords*>(mb->getVertexBuffer().pointer())[x*TerrainData.Size+z];
+				vertex.Normal.set(0.0f, 1.0f, 0.0f);
+				vertex.Color = vertexColor;
+				vertex.Pos.X = prevVertex.Pos.X;
+				vertex.Pos.Y = prevVertex.Pos.Y;
+				vertex.Pos.Z = prevVertex.Pos.Z;
+				vertex.TCoords.X = prevVertex.TCoords.X; 
+				vertex.TCoords.Y = prevVertex.TCoords.Y;
+			}
+		}
+    */
 
 		// drop heightMap, no longer needed
 		baseHeightMap->drop();
@@ -205,7 +243,7 @@ namespace scene
 		smoothTerrain(mb, smoothFactor);
 
 		// calculate smooth normals for the vertices
-		calculateNormals(mb);
+		calculateNormals(mb, TerrainData.Size);
 
 		// add the MeshBuffer to the mesh
 		Mesh->addMeshBuffer(mb);
@@ -232,8 +270,8 @@ namespace scene
 		const u32 endTime = os::Timer::getRealTime();
 
 		c8 tmp[255];
-		snprintf(tmp, 255, "Generated terrain data (%dx%d) in %.4f seconds",
-			TerrainData.Size, TerrainData.Size, (endTime - startTime) / 1000.0f );
+		snprintf(tmp, 255, "Generated terrain data (%dx%d) in %.4f seconds. Extended to (%dx%d)",
+			imageSize, imageSize, (endTime - startTime) / 1000.0f , TerrainData.Size, TerrainData.Size);
 		os::Printer::log(tmp);
 
     return true;
@@ -266,7 +304,7 @@ namespace scene
 		applyTransformation();
     u32 numPatches = TerrainData.PatchCount*TerrainData.PatchCount;
     for (u32 i = 0; i < numPatches; ++i) {
-      calculateNormals(RenderBuffer[i]);
+      calculateNormals(RenderBuffer[i], TerrainData.PatchSize);
     }
 		ForceRecalculation = true;
 	}
@@ -318,9 +356,9 @@ namespace scene
       for (s32 z = 0; z < TerrainData.PatchCount; ++z)
       {
         const s32 xstart = x*TerrainData.CalcPatchSize;
-        const s32 xend = xstart+TerrainData.CalcPatchSize;
+        const s32 xend = xstart+TerrainData.CalcPatchSize + 1;
         const s32 zstart = z*TerrainData.CalcPatchSize;
-        const s32 zend = zstart+TerrainData.CalcPatchSize;
+        const s32 zend = zstart+TerrainData.CalcPatchSize + 1;
 
         // Copy the data to the renderBuffers, after the normals have been calculated.
         for (s32 xx = xstart; xx < xend ; ++xx)
@@ -468,15 +506,26 @@ namespace scene
           indexBuffer.set_used(0);
 
 					// calculate the step we take this patch, based on the patches current LOD
-					const s32 step = 1 << TerrainData.Patches[index].CurrentLOD;
+					//const s32 step = 1 << TerrainData.Patches[index].CurrentLOD;
+          const s32 step = 1;
 
 					// Loop through patch and generate indices
 					while (z < TerrainData.CalcPatchSize)
 					{
-						const s32 index11 = getIndex(j, i, index, x, z);
-						const s32 index21 = getIndex(j, i, index, x + step, z);
-						const s32 index12 = getIndex(j, i, index, x, z + step);
-						const s32 index22 = getIndex(j, i, index, x + step, z + step);
+						//const s32 index11 = getIndex(j, i, index, x, z);
+						//const s32 index21 = getIndex(j, i, index, x + step, z);
+						//const s32 index12 = getIndex(j, i, index, x, z + step);
+						//const s32 index22 = getIndex(j, i, index, x + step, z + step);
+            
+						//const s32 index11 = getIndex(i, j, x, z);
+						//const s32 index21 = getIndex(i, j, x, z + step);
+						//const s32 index12 = getIndex(i, j, x + step, z);
+						//const s32 index22 = getIndex(i, j, x + step, z + step);
+
+						const s32 index11 = getIndex(i, j, x, z);
+						const s32 index21 = getIndex(i, j, x, z + step);
+						const s32 index12 = getIndex(i, j, x + step, z);
+						const s32 index22 = getIndex(i, j, x + step, z + step);
 
 						indexBuffer.push_back(index12);
 						indexBuffer.push_back(index11);
@@ -618,7 +667,8 @@ namespace scene
 		mb.getIndexBuffer().setType(RenderBuffer[0]->getIndexBuffer().getType());
 
 		// calculate the step we take for all patches, since LOD is the same
-		const s32 step = 1 << LOD;
+		//const s32 step = 1 << LOD;
+    const s32 step = 1;
 
 		// Generate the indices for all patches at the specified LOD
 		s32 index = 0;
@@ -632,10 +682,15 @@ namespace scene
 				// Loop through patch and generate indices
 				while (z < TerrainData.CalcPatchSize)
 				{
-					s32 index11 = getIndex(j, i, index, x, z);
-					s32 index21 = getIndex(j, i, index, x + step, z);
-					s32 index12 = getIndex(j, i, index, x, z + step);
-					s32 index22 = getIndex(j, i, index, x + step, z + step);
+					//s32 index11 = getIndex(j, i, index, x, z);
+					//s32 index21 = getIndex(j, i, index, x + step, z);
+					//s32 index12 = getIndex(j, i, index, x, z + step);
+					//s32 index22 = getIndex(j, i, index, x + step, z + step);
+
+					s32 index11 = getIndex(i, j, x, z);
+					s32 index21 = getIndex(i, j, x, z + step);
+					s32 index12 = getIndex(i, j, x + step, z );
+					s32 index22 = getIndex(i, j, x + step, z + step);
 
           // Remapping indices from patch space to global mesh space
           index11=((index11/TerrainData.CalcPatchSize)+(TerrainData.CalcPatchSize*i))*TerrainData.Size + ((index11%TerrainData.CalcPatchSize)) + (TerrainData.CalcPatchSize*j);
@@ -701,7 +756,8 @@ namespace scene
 			return -2; // Patch not visible, don't generate indices.
 
 		// calculate the step we take for this LOD
-		const s32 step = 1 << LOD;
+		//const s32 step = 1 << LOD;
+    const s32 step = 1;
 
 		// Generate the indices for the specified patch at the specified LOD
 		const s32 index = patchX * TerrainData.PatchCount + patchZ;
@@ -715,10 +771,15 @@ namespace scene
 		s32 rv=0;
 		while (z<TerrainData.CalcPatchSize)
 		{
-			const s32 index11 = getIndex(patchZ, patchX, index, x, z);
-			const s32 index21 = getIndex(patchZ, patchX, index, x + step, z);
-			const s32 index12 = getIndex(patchZ, patchX, index, x, z + step);
-			const s32 index22 = getIndex(patchZ, patchX, index, x + step, z + step);
+			//const s32 index11 = getIndex(patchZ, patchX, index, x, z);
+			//const s32 index21 = getIndex(patchZ, patchX, index, x + step, z);
+			//const s32 index12 = getIndex(patchZ, patchX, index, x, z + step);
+			//const s32 index22 = getIndex(patchZ, patchX, index, x + step, z + step);
+
+			const s32 index11 = getIndex(patchX, patchZ, x, z);
+			const s32 index21 = getIndex(patchX, patchZ, x, z + step);
+			const s32 index12 = getIndex(patchX, patchZ, x + step, z);
+			const s32 index22 = getIndex(patchX, patchZ, x + step, z + step);
 
 			indices[rv++] = index12;
 			indices[rv++] = index11;
@@ -835,10 +896,12 @@ namespace scene
 
 	//! used to get the indices when generating index data for patches at varying levels of detail.
 	u32 CSplatterTerrainSceneNode::getIndex(const s32 PatchX, const s32 PatchZ,
-					const s32 PatchIndex, u32 vX, u32 vZ) const
+					u32 vX, u32 vZ) const
 	{
-		// top border
-		if (vZ == 0)
+
+    s32 PatchIndex = PatchX*TerrainData.PatchCount + PatchZ;
+		// left border
+		/*if (vZ == 0)
 		{
 			if (TerrainData.Patches[PatchIndex].Top &&
 				TerrainData.Patches[PatchIndex].CurrentLOD < TerrainData.Patches[PatchIndex].Top->CurrentLOD &&
@@ -848,7 +911,7 @@ namespace scene
 			}
 		}
 		else
-		if (vZ == (u32)TerrainData.CalcPatchSize) // bottom border
+		if (vZ == (u32)TerrainData.CalcPatchSize) // right border
 		{
 			if (TerrainData.Patches[PatchIndex].Bottom &&
 				TerrainData.Patches[PatchIndex].CurrentLOD < TerrainData.Patches[PatchIndex].Bottom->CurrentLOD &&
@@ -858,7 +921,7 @@ namespace scene
 			}
 		}
 
-		// left border
+		// top border
 		if (vX == 0)
 		{
 			if (TerrainData.Patches[PatchIndex].Left &&
@@ -869,7 +932,7 @@ namespace scene
 			}
 		}
 		else
-		if (vX == (u32)TerrainData.CalcPatchSize) // right border
+		if (vX == (u32)TerrainData.CalcPatchSize) // bottom border
 		{
 			if (TerrainData.Patches[PatchIndex].Right &&
 				TerrainData.Patches[PatchIndex].CurrentLOD < TerrainData.Patches[PatchIndex].Right->CurrentLOD &&
@@ -887,7 +950,8 @@ namespace scene
 
 		//return (vZ + ((TerrainData.CalcPatchSize) * PatchZ)) * TerrainData.Size +
 			//(vX + ((TerrainData.CalcPatchSize) * PatchX));
-		return (vZ ) * TerrainData.CalcPatchSize + vX;
+    */
+		return (vX ) * TerrainData.PatchSize + vZ;
 	}
 
 
@@ -914,14 +978,14 @@ namespace scene
 
 
 	//! calculate smooth normals
-	void CSplatterTerrainSceneNode::calculateNormals(IDynamicMeshBuffer* mb)
+	void CSplatterTerrainSceneNode::calculateNormals(IDynamicMeshBuffer* mb, s32 size )
 	{
 		s32 count;
 		core::vector3df a, b, c, t;
 
-		for (s32 x=0; x<TerrainData.Size; ++x)
+		for (s32 x=0; x<size; ++x)
 		{
-			for (s32 z=0; z<TerrainData.Size; ++z)
+			for (s32 z=0; z<size; ++z)
 			{
 				count = 0;
 				core::vector3df normal;
@@ -929,18 +993,18 @@ namespace scene
 				// top left
 				if (x>0 && z>0)
 				{
-					a = mb->getVertexBuffer()[(x-1)*TerrainData.Size+z-1].Pos;
-					b = mb->getVertexBuffer()[(x-1)*TerrainData.Size+z].Pos;
-					c = mb->getVertexBuffer()[x*TerrainData.Size+z].Pos;
+					a = mb->getVertexBuffer()[(x-1)*size+z-1].Pos;
+					b = mb->getVertexBuffer()[(x-1)*size+z].Pos;
+					c = mb->getVertexBuffer()[x*size+z].Pos;
 					b -= a;
 					c -= a;
 					t = b.crossProduct(c);
 					t.normalize();
 					normal += t;
 
-					a = mb->getVertexBuffer()[(x-1)*TerrainData.Size+z-1].Pos;
-					b = mb->getVertexBuffer()[x*TerrainData.Size+z-1].Pos;
-					c = mb->getVertexBuffer()[x*TerrainData.Size+z].Pos;
+					a = mb->getVertexBuffer()[(x-1)*size+z-1].Pos;
+					b = mb->getVertexBuffer()[x*size+z-1].Pos;
+					c = mb->getVertexBuffer()[x*size+z].Pos;
 					b -= a;
 					c -= a;
 					t = b.crossProduct(c);
@@ -951,20 +1015,20 @@ namespace scene
 				}
 
 				// top right
-				if (x>0 && z<TerrainData.Size-1)
+				if (x>0 && z<size-1)
 				{
-					a = mb->getVertexBuffer()[(x-1)*TerrainData.Size+z].Pos;
-					b = mb->getVertexBuffer()[(x-1)*TerrainData.Size+z+1].Pos;
-					c = mb->getVertexBuffer()[x*TerrainData.Size+z+1].Pos;
+					a = mb->getVertexBuffer()[(x-1)*size+z].Pos;
+					b = mb->getVertexBuffer()[(x-1)*size+z+1].Pos;
+					c = mb->getVertexBuffer()[x*size+z+1].Pos;
 					b -= a;
 					c -= a;
 					t = b.crossProduct(c);
 					t.normalize();
 					normal += t;
 
-					a = mb->getVertexBuffer()[(x-1)*TerrainData.Size+z].Pos;
-					b = mb->getVertexBuffer()[x*TerrainData.Size+z+1].Pos;
-					c = mb->getVertexBuffer()[x*TerrainData.Size+z].Pos;
+					a = mb->getVertexBuffer()[(x-1)*size+z].Pos;
+					b = mb->getVertexBuffer()[x*size+z+1].Pos;
+					c = mb->getVertexBuffer()[x*size+z].Pos;
 					b -= a;
 					c -= a;
 					t = b.crossProduct(c);
@@ -975,20 +1039,20 @@ namespace scene
 				}
 
 				// bottom right
-				if (x<TerrainData.Size-1 && z<TerrainData.Size-1)
+				if (x<size-1 && z<size-1)
 				{
-					a = mb->getVertexBuffer()[x*TerrainData.Size+z+1].Pos;
-					b = mb->getVertexBuffer()[x*TerrainData.Size+z].Pos;
-					c = mb->getVertexBuffer()[(x+1)*TerrainData.Size+z+1].Pos;
+					a = mb->getVertexBuffer()[x*size+z+1].Pos;
+					b = mb->getVertexBuffer()[x*size+z].Pos;
+					c = mb->getVertexBuffer()[(x+1)*size+z+1].Pos;
 					b -= a;
 					c -= a;
 					t = b.crossProduct(c);
 					t.normalize();
 					normal += t;
 
-					a = mb->getVertexBuffer()[x*TerrainData.Size+z+1].Pos;
-					b = mb->getVertexBuffer()[(x+1)*TerrainData.Size+z+1].Pos;
-					c = mb->getVertexBuffer()[(x+1)*TerrainData.Size+z].Pos;
+					a = mb->getVertexBuffer()[x*size+z+1].Pos;
+					b = mb->getVertexBuffer()[(x+1)*size+z+1].Pos;
+					c = mb->getVertexBuffer()[(x+1)*size+z].Pos;
 					b -= a;
 					c -= a;
 					t = b.crossProduct(c);
@@ -999,20 +1063,20 @@ namespace scene
 				}
 
 				// bottom left
-				if (x<TerrainData.Size-1 && z>0)
+				if (x<size-1 && z>0)
 				{
-					a = mb->getVertexBuffer()[x*TerrainData.Size+z-1].Pos;
-					b = mb->getVertexBuffer()[x*TerrainData.Size+z].Pos;
-					c = mb->getVertexBuffer()[(x+1)*TerrainData.Size+z].Pos;
+					a = mb->getVertexBuffer()[x*size+z-1].Pos;
+					b = mb->getVertexBuffer()[x*size+z].Pos;
+					c = mb->getVertexBuffer()[(x+1)*size+z].Pos;
 					b -= a;
 					c -= a;
 					t = b.crossProduct(c);
 					t.normalize();
 					normal += t;
 
-					a = mb->getVertexBuffer()[x*TerrainData.Size+z-1].Pos;
-					b = mb->getVertexBuffer()[(x+1)*TerrainData.Size+z].Pos;
-					c = mb->getVertexBuffer()[(x+1)*TerrainData.Size+z-1].Pos;
+					a = mb->getVertexBuffer()[x*size+z-1].Pos;
+					b = mb->getVertexBuffer()[(x+1)*size+z].Pos;
+					c = mb->getVertexBuffer()[(x+1)*size+z-1].Pos;
 					b -= a;
 					c -= a;
 					t = b.crossProduct(c);
@@ -1031,7 +1095,7 @@ namespace scene
 					normal.set(0.0f, 1.0f, 0.0f);
 				}
 
-				mb->getVertexBuffer()[x * TerrainData.Size + z].Normal = normal;
+				mb->getVertexBuffer()[x * size + z].Normal = normal;
 			}
 		}
 	}
@@ -1045,7 +1109,7 @@ namespace scene
 		TerrainData.PatchCount = (TerrainData.Size-1) / (TerrainData.CalcPatchSize);
     u32 numPatches = TerrainData.PatchCount*TerrainData.PatchCount;
     u32 numVertices = TerrainData.Size*TerrainData.Size;
-    u32 numVerticesPatch = TerrainData.PatchSize*TerrainData.PatchSize;
+    u32 numVerticesPatch = (TerrainData.PatchSize)*(TerrainData.PatchSize);
 
 		if (TerrainData.Patches)
 			delete [] TerrainData.Patches;
@@ -1074,17 +1138,17 @@ namespace scene
         patch.CurrentLOD = 0;
 
         const s32 xstart = x*TerrainData.CalcPatchSize;
-        const s32 xend = xstart+TerrainData.CalcPatchSize;
+        const s32 xend = xstart+TerrainData.PatchSize;
         const s32 zstart = z*TerrainData.CalcPatchSize;
-        const s32 zend = zstart+TerrainData.CalcPatchSize;
+        const s32 zend = zstart+TerrainData.PatchSize;
 
         // Copy the data to the renderBuffers, after the normals have been calculated.
         for (s32 xx = xstart; xx < xend ; ++xx)
         {
           for (s32 zz = zstart; zz < zend ; ++zz)
           {
-            IVertexBuffer& vertexBuffer = RenderBuffer[x*TerrainData.PatchCount+z]->getVertexBuffer();
-            s32 vertexBufferIndex = (xx-xstart)*TerrainData.CalcPatchSize+(zz-zstart);
+            IVertexBuffer& vertexBuffer = RenderBuffer[index]->getVertexBuffer();
+            s32 vertexBufferIndex = (xx-xstart)*TerrainData.PatchSize+(zz-zstart);
             vertexBuffer[vertexBufferIndex] = mb->getVertexBuffer()[xx*TerrainData.Size + zz];
             vertexBuffer[vertexBufferIndex].Pos *= TerrainData.Scale;
             vertexBuffer[vertexBufferIndex].Pos += TerrainData.Position;
@@ -1092,12 +1156,12 @@ namespace scene
         }
 
         // Pre-allocate memory for indices
-        RenderBuffer[x*TerrainData.PatchCount+z]->getIndexBuffer().set_used(
+        RenderBuffer[index]->getIndexBuffer().set_used(
             TerrainData.CalcPatchSize * TerrainData.CalcPatchSize * 6);
 
-        RenderBuffer[x*TerrainData.PatchCount+z]->setDirty();
-        IndicesToRender[x*TerrainData.PatchCount+z] = 0;
-        VerticesToRender[x*TerrainData.PatchCount+z] = 0;
+        RenderBuffer[index]->setDirty();
+        IndicesToRender[index] = 0;
+        VerticesToRender[index] = 0;
       }
     }
 
@@ -1119,16 +1183,16 @@ namespace scene
 				SPatch& patch = TerrainData.Patches[index];
 				patch.CurrentLOD = 0;
 
-				const s32 xstart = x*TerrainData.CalcPatchSize;
-				const s32 xend = xstart+TerrainData.CalcPatchSize;
+				/*const s32 xstart = x*TerrainData.CalcPatchSize;
+				const s32 xend = xstart+TerrainData.PatchSize;
 				const s32 zstart = z*TerrainData.CalcPatchSize;
-				const s32 zend = zstart+TerrainData.CalcPatchSize;
+				const s32 zend = zstart+TerrainData.PatchSize;*/
 				// For each patch, calculate the bounding box (mins and maxes)
-				patch.BoundingBox.reset(RenderBuffer[x*TerrainData.PatchCount+z]->getPosition(0));
+				patch.BoundingBox.reset(RenderBuffer[index]->getPosition(0));
 
-				for (s32 xx = 0; xx <= TerrainData.CalcPatchSize; ++xx)
-					for (s32 zz = 0; zz <= TerrainData.CalcPatchSize; ++zz)
-						patch.BoundingBox.addInternalPoint(RenderBuffer[x*TerrainData.PatchCount+z]->getVertexBuffer()[xx * TerrainData.CalcPatchSize + zz].Pos);
+				for (s32 xx = 0; xx < TerrainData.PatchSize; ++xx)
+					for (s32 zz = 0; zz < TerrainData.PatchSize; ++zz)
+						patch.BoundingBox.addInternalPoint(RenderBuffer[index]->getVertexBuffer()[xx * TerrainData.PatchSize + zz].Pos);
 
 				// Reconfigure the bounding box of the terrain as a whole
 				TerrainData.BoundingBox.addInternalBox(patch.BoundingBox);

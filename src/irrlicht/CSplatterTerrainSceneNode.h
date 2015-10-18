@@ -265,13 +265,13 @@ namespace scene
 		virtual void preRenderIndicesCalculations();
 
 		//! get indices when generating index data for patches at varying levels of detail.
-		u32 getIndex(const s32 PatchX, const s32 PatchZ, const s32 PatchIndex, u32 vX, u32 vZ) const;
+		u32 getIndex(const s32 PatchX, const s32 PatchZ, u32 vX, u32 vZ) const;
 
 		//! smooth the terrain
 		void smoothTerrain(IDynamicMeshBuffer* mb, s32 smoothFactor);
 
 		//! calculate smooth normals
-		void calculateNormals(IDynamicMeshBuffer* mb);
+		void calculateNormals(IDynamicMeshBuffer* mb, s32 size);
 
 		//! create patches, stuff that needs to only be done once for patches goes here.
 		void createPatches( IDynamicMeshBuffer* mb );

@@ -73,6 +73,7 @@ namespace owc {
     core::list<scene::ISceneNodeAnimator*>::ConstIterator camera_animators = camera->getAnimators().begin();
     scene::ISceneNodeAnimatorCameraFPS* camera_animator = (scene::ISceneNodeAnimatorCameraFPS*) *camera_animators;
     camera_animator->setMoveSpeed( 5.0f );
+    camera_animator->setMoveSpeed( 1.0f );
 
 
 
@@ -82,7 +83,7 @@ namespace owc {
     myp_archive_loader_ = new irr::io::CMYPArchiveLoader( fsystem_ );
     fsystem_->addArchiveLoader( myp_archive_loader_ ); 
 
-    os::Printer::log("Loading art.myp", irr::ELL_INFORMATION);
+/*    os::Printer::log("Loading art.myp", irr::ELL_INFORMATION);
     if(!fsystem_->addFileArchive( irr::io::path(data_dir.c_str()).append("/").append("art.myp"), false, false, io::EFAT_MYP)) {
       os::Printer::log("Error loading art.myp", irr::ELL_ERROR);
     }
@@ -131,6 +132,7 @@ namespace owc {
     if(!fsystem_->addFileArchive( io::path(data_dir.c_str()).append("/").append("audio.myp"), false, false, io::EFAT_MYP)) {
       os::Printer::log("Error loading audio.myp", irr::ELL_ERROR);
     }
+    */
 
     u32 zoneId = atoi(properties_->get("zone").c_str());
 

@@ -26,7 +26,10 @@ namespace scene
 		ETPS_65 = 65,
 
 		//! patch size of 129, at most, use 8 levels of detail with this patch size.
-		ETPS_129 = 129
+		ETPS_129 = 129,
+
+		//! patch size of 257, at most, use 8 levels of detail with this patch size.
+		ETPS_257 = 257 
 	};
 
 } // end namespace scene
