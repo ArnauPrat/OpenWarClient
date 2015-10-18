@@ -182,6 +182,10 @@ namespace scene
 				vertex.Pos.X = fx;
 				vertex.Pos.Y = (f32) (baseHeightMap->getPixel(TerrainData.Size-x-1,z).getLightness()*248.0f + 
                        (f32) offsetHeightMap->getPixel(TerrainData.Size-x-1,z).getLightness()*8.0f);
+        /*if(x == 0) {
+          printf("%d %d %d %d\n", baseHeightMap->getPixel(TerrainData.Size-x-1,z).getRed(), baseHeightMap->getPixel(TerrainData.Size-x-1,z).getGreen(),
+              baseHeightMap->getPixel(TerrainData.Size-x-1,z).getBlue(), baseHeightMap->getPixel(TerrainData.Size-x-1,z).getAlpha());
+        }*/
 				vertex.Pos.Z = fz;
 
 				vertex.TCoords.X = vertex.TCoords2.X = 1.f-fx2;
@@ -324,11 +328,12 @@ namespace scene
           for (s32 zz = zstart; zz < zend ; ++zz)
           {
 
-            RenderBuffer[x*TerrainData.PatchCount+z]->getVertexBuffer()[(xx-xstart)*TerrainData.CalcPatchSize+(zz-zstart)].Pos = Mesh->getMeshBuffer(0)->getPosition(xx*vtxCount + zz) * TerrainData.Scale + TerrainData.Position;
-
-            RenderBuffer[x*TerrainData.PatchCount+z]->getVertexBuffer()[(xx-xstart)*TerrainData.CalcPatchSize+(zz-zstart)].Pos -= TerrainData.RotationPivot;
-            rotMatrix.inverseRotateVect(RenderBuffer[x*TerrainData.PatchCount+z]->getVertexBuffer()[(xx-xstart)*TerrainData.CalcPatchSize+(zz-zstart)].Pos);
-            RenderBuffer[x*TerrainData.PatchCount+z]->getVertexBuffer()[(xx-xstart)*TerrainData.CalcPatchSize+(zz-zstart)].Pos += TerrainData.RotationPivot;
+            IVertexBuffer& vertexBuffer = RenderBuffer[x*TerrainData.PatchCount+z]->getVertexBuffer();
+            s32 vertexBufferIndex = (xx-xstart)*TerrainData.CalcPatchSize+(zz-zstart);
+            vertexBuffer[vertexBufferIndex].Pos = Mesh->getMeshBuffer(0)->getPosition(xx*TerrainData.Size + zz) * TerrainData.Scale + TerrainData.Position;
+            vertexBuffer[vertexBufferIndex].Pos -= TerrainData.RotationPivot;
+            rotMatrix.inverseRotateVect(vertexBuffer[vertexBufferIndex].Pos);
+            vertexBuffer[vertexBufferIndex].Pos += TerrainData.RotationPivot;
           }
         }
       }
@@ -459,7 +464,7 @@ namespace scene
 					s32 z = 0;
 
           scene::IIndexBuffer& indexBuffer = RenderBuffer[i*TerrainData.PatchCount+j]->getIndexBuffer();
-          IndicesToRender = 0;
+          IndicesToRender[i*TerrainData.PatchCount + j] = 0;
           indexBuffer.set_used(0);
 
 					// calculate the step we take this patch, based on the patches current LOD
@@ -479,7 +484,7 @@ namespace scene
 						indexBuffer.push_back(index22);
 						indexBuffer.push_back(index11);
 						indexBuffer.push_back(index21);
-						IndicesToRender+=6;
+						IndicesToRender[i*TerrainData.PatchCount + j]+=6;
 
 						// increment index position horizontally
 						x += step;
@@ -1037,7 +1042,7 @@ namespace scene
 	{
     
     mb->grab();
-		TerrainData.PatchCount = (TerrainData.Size - 1) / (TerrainData.CalcPatchSize);
+		TerrainData.PatchCount = (TerrainData.Size-1) / (TerrainData.CalcPatchSize);
     u32 numPatches = TerrainData.PatchCount*TerrainData.PatchCount;
     u32 numVertices = TerrainData.Size*TerrainData.Size;
     u32 numVerticesPatch = TerrainData.PatchSize*TerrainData.PatchSize;
@@ -1052,50 +1057,52 @@ namespace scene
     IndicesToRender = new u32[numPatches];
     VerticesToRender = new u32[numPatches];
     for (u32 i = 0; i < numPatches ; ++i) {
-      RenderBuffer[i] = new CDynamicMeshBuffer(video::EVT_2TCOORDS, video::EIT_16BIT);
+      RenderBuffer[i] = new CDynamicMeshBuffer(video::EVT_2TCOORDS, video::EIT_32BIT);
       RenderBuffer[i]->setHardwareMappingHint(scene::EHM_STATIC, scene::EBT_VERTEX);
       RenderBuffer[i]->setHardwareMappingHint(scene::EHM_DYNAMIC, scene::EBT_INDEX);
-//      RenderBuffer[i]->IMeshBuffer::getIndexType(mb->getIndexType());
-
-      //! copying the data from the mesh into each patch
+      //      RenderBuffer[i]->IMeshBuffer::getIndexType(mb->getIndexType());
       RenderBuffer[i]->getVertexBuffer().set_used(numVerticesPatch);
-      for (s32 x = 0; x < TerrainData.PatchCount; ++x)
-      {
-        for (s32 z = 0; z < TerrainData.PatchCount; ++z)
-        {
-          const s32 index = x * TerrainData.PatchCount + z;
-          SPatch& patch = TerrainData.Patches[index];
-          patch.CurrentLOD = 0;
-
-          const s32 xstart = x*TerrainData.CalcPatchSize;
-          const s32 xend = xstart+TerrainData.CalcPatchSize;
-          const s32 zstart = z*TerrainData.CalcPatchSize;
-          const s32 zend = zstart+TerrainData.CalcPatchSize;
-
-          // Copy the data to the renderBuffers, after the normals have been calculated.
-          for (s32 xx = xstart; xx < xend ; ++xx)
-          {
-            for (s32 zz = zstart; zz < zend ; ++zz)
-            {
-              RenderBuffer[x*TerrainData.PatchCount+z]->getVertexBuffer()[(xx-xstart)*TerrainData.CalcPatchSize+(zz-zstart)] = mb->getVertexBuffer()[xx*numVertices + zz];
-              RenderBuffer[x*TerrainData.PatchCount+z]->getVertexBuffer()[(xx-xstart)*TerrainData.CalcPatchSize+(zz-zstart)].Pos *= TerrainData.Scale;
-              RenderBuffer[x*TerrainData.PatchCount+z]->getVertexBuffer()[(xx-xstart)*TerrainData.CalcPatchSize+(zz-zstart)].Pos += TerrainData.Position;
-            }
-          }
-
-          // Pre-allocate memory for indices
-          RenderBuffer[x*TerrainData.PatchCount+z]->getIndexBuffer().set_used(
-              TerrainData.CalcPatchSize * TerrainData.CalcPatchSize * 6);
-
-          RenderBuffer[x*TerrainData.PatchCount+z]->setDirty();
-          IndicesToRender[x*TerrainData.PatchCount+z] = 0;
-          VerticesToRender[x*TerrainData.PatchCount+z] = 0;
-        }
-      }
-
     }
+
+    //! copying the data from the mesh into each patch
+    for (s32 x = 0; x < TerrainData.PatchCount; ++x)
+    {
+      for (s32 z = 0; z < TerrainData.PatchCount; ++z)
+      {
+        const s32 index = x * TerrainData.PatchCount + z;
+        SPatch& patch = TerrainData.Patches[index];
+        patch.CurrentLOD = 0;
+
+        const s32 xstart = x*TerrainData.CalcPatchSize;
+        const s32 xend = xstart+TerrainData.CalcPatchSize;
+        const s32 zstart = z*TerrainData.CalcPatchSize;
+        const s32 zend = zstart+TerrainData.CalcPatchSize;
+
+        // Copy the data to the renderBuffers, after the normals have been calculated.
+        for (s32 xx = xstart; xx < xend ; ++xx)
+        {
+          for (s32 zz = zstart; zz < zend ; ++zz)
+          {
+            IVertexBuffer& vertexBuffer = RenderBuffer[x*TerrainData.PatchCount+z]->getVertexBuffer();
+            s32 vertexBufferIndex = (xx-xstart)*TerrainData.CalcPatchSize+(zz-zstart);
+            vertexBuffer[vertexBufferIndex] = mb->getVertexBuffer()[xx*TerrainData.Size + zz];
+            vertexBuffer[vertexBufferIndex].Pos *= TerrainData.Scale;
+            vertexBuffer[vertexBufferIndex].Pos += TerrainData.Position;
+          }
+        }
+
+        // Pre-allocate memory for indices
+        RenderBuffer[x*TerrainData.PatchCount+z]->getIndexBuffer().set_used(
+            TerrainData.CalcPatchSize * TerrainData.CalcPatchSize * 6);
+
+        RenderBuffer[x*TerrainData.PatchCount+z]->setDirty();
+        IndicesToRender[x*TerrainData.PatchCount+z] = 0;
+        VerticesToRender[x*TerrainData.PatchCount+z] = 0;
+      }
+    }
+
     mb->drop();
-	}
+  }
 
 
 	//! used to calculate the internal STerrainData structure both at creation and after scaling/position calls.

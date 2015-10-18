@@ -43,8 +43,8 @@ namespace owc {
           core::vector3df(0.0f, 0.f, 0.f),     // rotation
           core::vector3df(64.0f, 1.0f, 64.0f),  // scale
           video::SColor ( 255, 255, 255, 255 ),   // vertexColor
-          3,                  
-          scene::ETPS_17,             
+          0,                  
+          scene::ETPS_129,             
           0                   
           );
 

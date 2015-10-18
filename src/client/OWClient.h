@@ -42,7 +42,6 @@ namespace owc {
     static scene::ISceneManager*  smgr_;
     static gui::IGUIEnvironment*  guienv_;
     static io::IFileSystem*       fsystem_;
-    static ILogger*               logger_;
     
     static io::CProperties*            properties_;
 

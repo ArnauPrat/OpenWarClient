@@ -22,7 +22,6 @@ namespace owc {
   scene::ISceneManager*   OWClient::smgr_ = NULL;
   gui::IGUIEnvironment*   OWClient::guienv_ = NULL;
   irr::io::IFileSystem*        OWClient::fsystem_ = NULL;
-  ILogger*                OWClient::logger_ = NULL;
 
   io::CProperties*             OWClient::properties_ = NULL;
 
@@ -76,7 +75,6 @@ namespace owc {
     camera_animator->setMoveSpeed( 5.0f );
 
 
-    logger_ = device_->getLogger();
 
 
     /** Adding resource files and directories **/
@@ -84,60 +82,61 @@ namespace owc {
     myp_archive_loader_ = new irr::io::CMYPArchiveLoader( fsystem_ );
     fsystem_->addArchiveLoader( myp_archive_loader_ ); 
 
-    logger_->log("Loading art.myp", irr::ELL_INFORMATION);
+    os::Printer::log("Loading art.myp", irr::ELL_INFORMATION);
     if(!fsystem_->addFileArchive( irr::io::path(data_dir.c_str()).append("/").append("art.myp"), false, false, io::EFAT_MYP)) {
-      logger_->log("Error loading art.myp", irr::ELL_ERROR);
+      os::Printer::log("Error loading art.myp", irr::ELL_ERROR);
     }
 
-    logger_->log("loading art2.myp", irr::ELL_INFORMATION);
+    os::Printer::log("Loading art2.myp", irr::ELL_INFORMATION);
     if(!fsystem_->addFileArchive( io::path(data_dir.c_str()).append("/").append("art2.myp"), false, false, io::EFAT_MYP)) {
-      logger_->log("Error loading art2.myp", irr::ELL_ERROR);
+      os::Printer::log("Error loading art2.myp", irr::ELL_ERROR);
     }
 
-    logger_->log("Loading art3.myp", irr::ELL_INFORMATION);
+    os::Printer::log("Loading art3.myp", irr::ELL_INFORMATION);
     if(!fsystem_->addFileArchive( io::path(data_dir.c_str()).append("/").append("art3.myp"), false, false, io::EFAT_MYP)) {
-      logger_->log("Error loading art.myp", irr::ELL_ERROR);
+      os::Printer::log("Error loading art.myp", irr::ELL_ERROR);
     }
 
-    logger_->log("Loading data.myp", irr::ELL_INFORMATION);
+    os::Printer::log("Loading data.myp", irr::ELL_INFORMATION);
     if(!fsystem_->addFileArchive( io::path(data_dir.c_str()).append("/").append("data.myp"), false, false, io::EFAT_MYP)) {
-      logger_->log("Error loading data.myp", irr::ELL_ERROR);
+      os::Printer::log("Error loading data.myp", irr::ELL_ERROR);
     }
 
-    logger_->log("Loading world.myp", irr::ELL_INFORMATION);
+    os::Printer::log("Loading world.myp", irr::ELL_INFORMATION);
     if(!fsystem_->addFileArchive( io::path(data_dir.c_str()).append("/").append("world.myp"), false, false, io::EFAT_MYP)) {
-      logger_->log("Error loading world.myp", irr::ELL_ERROR);
+      os::Printer::log("Error loading world.myp", irr::ELL_ERROR);
     }
 
-    logger_->log("Loading interface.myp", irr::ELL_INFORMATION);
+    os::Printer::log("Loading interface.myp", irr::ELL_INFORMATION);
     if(!fsystem_->addFileArchive( io::path(data_dir.c_str()).append("/").append("interface.myp"), false, false, io::EFAT_MYP)) {
-      logger_->log("Error loading interface.myp", irr::ELL_ERROR);
+      os::Printer::log("Error loading interface.myp", irr::ELL_ERROR);
     }
 
-    logger_->log("Loading mft.myp", irr::ELL_INFORMATION);
+    os::Printer::log("Loading mft.myp", irr::ELL_INFORMATION);
     if(!fsystem_->addFileArchive( io::path(data_dir.c_str()).append("/").append("mft.myp"), false, false, io::EFAT_MYP)) {
-      logger_->log("Error loading mft.myp", irr::ELL_ERROR);
+      os::Printer::log("Error loading mft.myp", irr::ELL_ERROR);
     }
 
-    logger_->log("Loading patch.myp", irr::ELL_INFORMATION);
+    os::Printer::log("Loading patch.myp", irr::ELL_INFORMATION);
     if(!fsystem_->addFileArchive( io::path(data_dir.c_str()).append("/").append("patch.myp"), false, false, io::EFAT_MYP)) {
-      logger_->log("Error loading patch.myp", irr::ELL_ERROR);
+      os::Printer::log("Error loading patch.myp", irr::ELL_ERROR);
     }
 
-    logger_->log("Loading vo_english.myp", irr::ELL_INFORMATION);
+    os::Printer::log("Loading vo_english.myp", irr::ELL_INFORMATION);
     if(!fsystem_->addFileArchive( io::path(data_dir.c_str()).append("/").append("vo_english.myp"), false, false, io::EFAT_MYP)) {
-      logger_->log("Error loading vo_english.myp", irr::ELL_ERROR);
+      os::Printer::log("Error loading vo_english.myp", irr::ELL_ERROR);
     }
 
-    logger_->log("Loading audio.myp", irr::ELL_INFORMATION);
+    os::Printer::log("Loading audio.myp", irr::ELL_INFORMATION);
     if(!fsystem_->addFileArchive( io::path(data_dir.c_str()).append("/").append("audio.myp"), false, false, io::EFAT_MYP)) {
-      logger_->log("Error loading audio.myp", irr::ELL_ERROR);
+      os::Printer::log("Error loading audio.myp", irr::ELL_ERROR);
     }
-
 
     u32 zoneId = atoi(properties_->get("zone").c_str());
 
-    os::Printer::log("Loading Zone");
+    c8 message[256];
+    sprintf(message,"Loading Zone %03d",zoneId);
+    os::Printer::log(message);
     world::CZone zone(smgr_);
     zone.loadZone(zoneId);
     return 0;
