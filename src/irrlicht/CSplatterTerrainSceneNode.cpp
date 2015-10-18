@@ -508,9 +508,11 @@ namespace scene
 					// calculate the step we take this patch, based on the patches current LOD
 					//const s32 step = 1 << TerrainData.Patches[index].CurrentLOD;
           const s32 step = 1;
+          IVertexBuffer& vertexBuffer = RenderBuffer[index]->getVertexBuffer();
 
 					// Loop through patch and generate indices
-					while (z < TerrainData.CalcPatchSize)
+          printf("Starting row\n");
+					while (x < TerrainData.CalcPatchSize)
 					{
 						//const s32 index11 = getIndex(j, i, index, x, z);
 						//const s32 index21 = getIndex(j, i, index, x + step, z);
@@ -523,26 +525,34 @@ namespace scene
 						//const s32 index22 = getIndex(i, j, x + step, z + step);
 
 						const s32 index11 = getIndex(i, j, x, z);
-						const s32 index21 = getIndex(i, j, x, z + step);
-						const s32 index12 = getIndex(i, j, x + step, z);
+						const s32 index21 = getIndex(i, j, x + step, z);
+						const s32 index12 = getIndex(i, j, x, z + step);
 						const s32 index22 = getIndex(i, j, x + step, z + step);
 
-						indexBuffer.push_back(index12);
-						indexBuffer.push_back(index11);
-						indexBuffer.push_back(index22);
-						indexBuffer.push_back(index22);
-						indexBuffer.push_back(index11);
+            printf("%d %d %d %d\n", index11, index21, index12, index22);
+            printf("%f %f %f\n", vertexBuffer[index11].Pos.X, vertexBuffer[index11].Pos.Y, vertexBuffer[index11].Pos.Z );
+            printf("%f %f %f\n", vertexBuffer[index21].Pos.X, vertexBuffer[index21].Pos.Y, vertexBuffer[index21].Pos.Z );
+            printf("%f %f %f\n", vertexBuffer[index12].Pos.X, vertexBuffer[index12].Pos.Y, vertexBuffer[index12].Pos.Z );
+            printf("%f %f %f\n", vertexBuffer[index22].Pos.X, vertexBuffer[index22].Pos.Y, vertexBuffer[index22].Pos.Z );
+
 						indexBuffer.push_back(index21);
+						indexBuffer.push_back(index11);
+						indexBuffer.push_back(index22);
+						indexBuffer.push_back(index22);
+						indexBuffer.push_back(index11);
+						indexBuffer.push_back(index12);
 						IndicesToRender[i*TerrainData.PatchCount + j]+=6;
 
 						// increment index position horizontally
-						x += step;
+						z += step;
 
 						// we've hit an edge
-						if (x >= TerrainData.CalcPatchSize)
+						if (z >= TerrainData.CalcPatchSize)
 						{
-							x = 0;
-							z += step;
+							z = 0;
+							x += step;
+              printf("Starting row\n");
+              break;
 						}
 					}
 				}
@@ -951,7 +961,7 @@ namespace scene
 		//return (vZ + ((TerrainData.CalcPatchSize) * PatchZ)) * TerrainData.Size +
 			//(vX + ((TerrainData.CalcPatchSize) * PatchX));
     */
-		return (vX ) * TerrainData.PatchSize + vZ;
+		return vX * TerrainData.PatchSize + vZ;
 	}
 
 
