@@ -34,21 +34,21 @@ namespace owc {
       Properties.load(sectorFile);
       sectorFile->drop();*/
 
-      //scene::ISplatterTerrainSceneNode* terrain = SceneManager->addSplatterTerrainSceneNode(
-          //offsetFileName,
-          //terrainFileName,
-          //0,                  
-          //-1,                 
-          //core::vector3df(0.0f, 0.f, 0.f),     // position
-          //core::vector3df(0.0f, 0.f, 0.f),     // rotation
-          //core::vector3df(64.0f, 1.0f, 64.0f),  // scale
-          //video::SColor ( 255, 255, 255, 255 ),   // vertexColor
-          //0,                  
-          //scene::ETPS_129,             
-          //0                   
-          //);
-
       scene::ISplatterTerrainSceneNode* terrain = SceneManager->addSplatterTerrainSceneNode(
+          offsetFileName,
+          terrainFileName,
+          0,                  
+          -1,                 
+          core::vector3df(0.0f, 0.f, 0.f),     // position
+          core::vector3df(0.0f, 0.f, 0.f),     // rotation
+          core::vector3df(64.0f, 1.0f, 64.0f),  // scale
+          video::SColor ( 255, 255, 255, 255 ),   // vertexColor
+          3,                  
+          scene::ETPS_129,             
+          0                   
+          );
+
+      /*scene::ISplatterTerrainSceneNode* terrain = SceneManager->addSplatterTerrainSceneNode(
           "./Heightmap.png",
           "./Heightmap.png",
           0,                  
@@ -57,10 +57,11 @@ namespace owc {
           core::vector3df(0.0f, 0.f, 0.f),     // rotation
           core::vector3df(8.0f, 1.0f, 8.0f),  // scale
           video::SColor ( 255, 255, 255, 255 ),   // vertexColor
-          0,                  
-          scene::ETPS_257,             
+          3,                  
+          scene::ETPS_129,             
           0                   
           );
+          */
 
       terrain->setMaterialFlag(video::EMF_WIREFRAME, true);
       const core::vector3df& position =  terrain->getPosition();

@@ -183,10 +183,10 @@ namespace scene
 				vertex.Normal.set(0.0f, 1.0f, 0.0f);
 				vertex.Color = vertexColor;
 				vertex.Pos.X = fx;
-				/*vertex.Pos.Y = (f32) (baseHeightMap->getPixel(imageSize-x-1,z).getLightness()*248.0f  + 
-                       (f32) offsetHeightMap->getPixel(imageSize-x-1,z).getLightness()*8.0f);*/
+				vertex.Pos.Y = (f32) (baseHeightMap->getPixel(imageSize-x-1,z).getLightness()*248.0f  + 
+                       (f32) offsetHeightMap->getPixel(imageSize-x-1,z).getLightness()*8.0f);
 
-				vertex.Pos.Y = (f32) (baseHeightMap->getPixel(imageSize-x-1,z).getLightness());
+				//vertex.Pos.Y = (f32) (baseHeightMap->getPixel(imageSize-x-1,z).getLightness());
         /*if(x == 0) {
           printf("%d %d %d %d\n", baseHeightMap->getPixel(TerrainData.Size-x-1,z).getRed(), baseHeightMap->getPixel(TerrainData.Size-x-1,z).getGreen(),
               baseHeightMap->getPixel(TerrainData.Size-x-1,z).getBlue(), baseHeightMap->getPixel(TerrainData.Size-x-1,z).getAlpha());
@@ -201,7 +201,7 @@ namespace scene
 			++fx;
 		}
 
-    /*// Extending the edges to match the real size of the terrain along the x axis
+    // Extending the edges to match the real size of the terrain along the x axis
 		for (s32 x = 0; x < imageSize; ++x)
 		{
 			for (s32 z = imageSize; z < TerrainData.Size; ++z)
@@ -234,7 +234,7 @@ namespace scene
 				vertex.TCoords.Y = prevVertex.TCoords.Y;
 			}
 		}
-    */
+    
 
 		// drop heightMap, no longer needed
 		baseHeightMap->drop();
@@ -367,7 +367,7 @@ namespace scene
           {
 
             IVertexBuffer& vertexBuffer = RenderBuffer[x*TerrainData.PatchCount+z]->getVertexBuffer();
-            s32 vertexBufferIndex = (xx-xstart)*TerrainData.CalcPatchSize+(zz-zstart);
+            s32 vertexBufferIndex = (xx-xstart)*TerrainData.PatchSize+(zz-zstart);
             vertexBuffer[vertexBufferIndex].Pos = Mesh->getMeshBuffer(0)->getPosition(xx*TerrainData.Size + zz) * TerrainData.Scale + TerrainData.Position;
             vertexBuffer[vertexBufferIndex].Pos -= TerrainData.RotationPivot;
             rotMatrix.inverseRotateVect(vertexBuffer[vertexBufferIndex].Pos);
@@ -506,34 +506,24 @@ namespace scene
           indexBuffer.set_used(0);
 
 					// calculate the step we take this patch, based on the patches current LOD
-					//const s32 step = 1 << TerrainData.Patches[index].CurrentLOD;
-          const s32 step = 1;
+					const s32 step = 1 << TerrainData.Patches[index].CurrentLOD;
           IVertexBuffer& vertexBuffer = RenderBuffer[index]->getVertexBuffer();
 
 					// Loop through patch and generate indices
-          printf("Starting row\n");
 					while (x < TerrainData.CalcPatchSize)
 					{
-						//const s32 index11 = getIndex(j, i, index, x, z);
-						//const s32 index21 = getIndex(j, i, index, x + step, z);
-						//const s32 index12 = getIndex(j, i, index, x, z + step);
-						//const s32 index22 = getIndex(j, i, index, x + step, z + step);
-            
-						//const s32 index11 = getIndex(i, j, x, z);
-						//const s32 index21 = getIndex(i, j, x, z + step);
-						//const s32 index12 = getIndex(i, j, x + step, z);
-						//const s32 index22 = getIndex(i, j, x + step, z + step);
 
 						const s32 index11 = getIndex(i, j, x, z);
 						const s32 index21 = getIndex(i, j, x + step, z);
 						const s32 index12 = getIndex(i, j, x, z + step);
 						const s32 index22 = getIndex(i, j, x + step, z + step);
 
-            printf("%d %d %d %d\n", index11, index21, index12, index22);
-            printf("%f %f %f\n", vertexBuffer[index11].Pos.X, vertexBuffer[index11].Pos.Y, vertexBuffer[index11].Pos.Z );
-            printf("%f %f %f\n", vertexBuffer[index21].Pos.X, vertexBuffer[index21].Pos.Y, vertexBuffer[index21].Pos.Z );
-            printf("%f %f %f\n", vertexBuffer[index12].Pos.X, vertexBuffer[index12].Pos.Y, vertexBuffer[index12].Pos.Z );
-            printf("%f %f %f\n", vertexBuffer[index22].Pos.X, vertexBuffer[index22].Pos.Y, vertexBuffer[index22].Pos.Z );
+            //printf("%d %d %d %d\n", index11, index21, index12, index22);
+            //printf("%f %f %f\n", vertexBuffer[index11].Pos.X, vertexBuffer[index11].Pos.Y, vertexBuffer[index11].Pos.Z );
+            //printf("%f %f %f\n", vertexBuffer[index21].Pos.X, vertexBuffer[index21].Pos.Y, vertexBuffer[index21].Pos.Z );
+            //printf("%f %f %f\n", vertexBuffer[index12].Pos.X, vertexBuffer[index12].Pos.Y, vertexBuffer[index12].Pos.Z );
+            //printf("%f %f %f\n", vertexBuffer[index22].Pos.X, vertexBuffer[index22].Pos.Y, vertexBuffer[index22].Pos.Z );
+            //printf("%f %f %f\n", vertexBuffer[256].Pos.X, vertexBuffer[256].Pos.Y, vertexBuffer[256].Pos.Z );
 
 						indexBuffer.push_back(index21);
 						indexBuffer.push_back(index11);
@@ -551,8 +541,6 @@ namespace scene
 						{
 							z = 0;
 							x += step;
-              printf("Starting row\n");
-              break;
 						}
 					}
 				}
@@ -677,8 +665,7 @@ namespace scene
 		mb.getIndexBuffer().setType(RenderBuffer[0]->getIndexBuffer().getType());
 
 		// calculate the step we take for all patches, since LOD is the same
-		//const s32 step = 1 << LOD;
-    const s32 step = 1;
+		const s32 step = 1 << LOD;
 
 		// Generate the indices for all patches at the specified LOD
 		s32 index = 0;
@@ -766,8 +753,7 @@ namespace scene
 			return -2; // Patch not visible, don't generate indices.
 
 		// calculate the step we take for this LOD
-		//const s32 step = 1 << LOD;
-    const s32 step = 1;
+		const s32 step = 1 << LOD;
 
 		// Generate the indices for the specified patch at the specified LOD
 		const s32 index = patchX * TerrainData.PatchCount + patchZ;
@@ -911,7 +897,7 @@ namespace scene
 
     s32 PatchIndex = PatchX*TerrainData.PatchCount + PatchZ;
 		// left border
-		/*if (vZ == 0)
+		if (vZ == 0)
 		{
 			if (TerrainData.Patches[PatchIndex].Top &&
 				TerrainData.Patches[PatchIndex].CurrentLOD < TerrainData.Patches[PatchIndex].Top->CurrentLOD &&
@@ -960,7 +946,7 @@ namespace scene
 
 		//return (vZ + ((TerrainData.CalcPatchSize) * PatchZ)) * TerrainData.Size +
 			//(vX + ((TerrainData.CalcPatchSize) * PatchX));
-    */
+    
 		return vX * TerrainData.PatchSize + vZ;
 	}
 
@@ -1155,6 +1141,7 @@ namespace scene
         // Copy the data to the renderBuffers, after the normals have been calculated.
         for (s32 xx = xstart; xx < xend ; ++xx)
         {
+          //printf("Starting row\n");
           for (s32 zz = zstart; zz < zend ; ++zz)
           {
             IVertexBuffer& vertexBuffer = RenderBuffer[index]->getVertexBuffer();
@@ -1162,6 +1149,7 @@ namespace scene
             vertexBuffer[vertexBufferIndex] = mb->getVertexBuffer()[xx*TerrainData.Size + zz];
             vertexBuffer[vertexBufferIndex].Pos *= TerrainData.Scale;
             vertexBuffer[vertexBufferIndex].Pos += TerrainData.Position;
+           // printf("%d, %f %f %f\n", vertexBufferIndex, vertexBuffer[vertexBufferIndex].Pos.X, vertexBuffer[vertexBufferIndex].Pos.Y, vertexBuffer[vertexBufferIndex].Pos.Z );
           }
         }
 
