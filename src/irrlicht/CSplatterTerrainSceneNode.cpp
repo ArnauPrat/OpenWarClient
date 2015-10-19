@@ -42,6 +42,7 @@ namespace scene
 	CameraMovementDelta(10.0f), CameraRotationDelta(1.0f),CameraFOVDelta(0.1f),
 	TCoordScale1(1.0f), TCoordScale2(1.0f), SmoothFactor(0), FileSystem(fs)
 	{
+//    DebugDataVisible = EDS_BBOX | EDS_BBOX_BUFFERS;
 		#ifdef _DEBUG
 		setDebugName("CSplatterTerrainSceneNode");
 		#endif
@@ -193,8 +194,8 @@ namespace scene
         }*/
 				vertex.Pos.Z = fz;
 
-				vertex.TCoords.X = 0.0;
-				vertex.TCoords.Y = 0.0;
+				vertex.TCoords.X = (f32)(x % 2);
+				vertex.TCoords.Y = (f32)(z % 2);
 
 				++fz;
 			}
@@ -214,7 +215,7 @@ namespace scene
 				vertex.Pos.Y = prevVertex.Pos.Y;
 				vertex.Pos.Z = prevVertex.Pos.Z;
 				vertex.TCoords.X = prevVertex.TCoords.X; 
-				vertex.TCoords.Y = prevVertex.TCoords.Y;
+				vertex.TCoords.Y = (f32)(((u32)prevVertex.TCoords.Y+1)%2); 
 			}
 		}
 
@@ -230,7 +231,7 @@ namespace scene
 				vertex.Pos.X = prevVertex.Pos.X;
 				vertex.Pos.Y = prevVertex.Pos.Y;
 				vertex.Pos.Z = prevVertex.Pos.Z;
-				vertex.TCoords.X = prevVertex.TCoords.X; 
+				vertex.TCoords.X = (f32)(((u32)prevVertex.TCoords.X+1)%2); 
 				vertex.TCoords.Y = prevVertex.TCoords.Y;
 			}
 		}
@@ -518,12 +519,6 @@ namespace scene
 						const s32 index12 = getIndex(i, j, x, z + step);
 						const s32 index22 = getIndex(i, j, x + step, z + step);
 
-            //printf("%d %d %d %d\n", index11, index21, index12, index22);
-            //printf("%f %f %f\n", vertexBuffer[index11].Pos.X, vertexBuffer[index11].Pos.Y, vertexBuffer[index11].Pos.Z );
-            //printf("%f %f %f\n", vertexBuffer[index21].Pos.X, vertexBuffer[index21].Pos.Y, vertexBuffer[index21].Pos.Z );
-            //printf("%f %f %f\n", vertexBuffer[index12].Pos.X, vertexBuffer[index12].Pos.Y, vertexBuffer[index12].Pos.Z );
-            //printf("%f %f %f\n", vertexBuffer[index22].Pos.X, vertexBuffer[index22].Pos.Y, vertexBuffer[index22].Pos.Z );
-            //printf("%f %f %f\n", vertexBuffer[256].Pos.X, vertexBuffer[256].Pos.Y, vertexBuffer[256].Pos.Z );
 
 						indexBuffer.push_back(index21);
 						indexBuffer.push_back(index11);
@@ -677,23 +672,22 @@ namespace scene
 				s32 z = 0;
 
 				// Loop through patch and generate indices
-				while (z < TerrainData.CalcPatchSize)
+				while (x < TerrainData.CalcPatchSize)
 				{
-					//s32 index11 = getIndex(j, i, index, x, z);
-					//s32 index21 = getIndex(j, i, index, x + step, z);
-					//s32 index12 = getIndex(j, i, index, x, z + step);
-					//s32 index22 = getIndex(j, i, index, x + step, z + step);
-
 					s32 index11 = getIndex(i, j, x, z);
-					s32 index21 = getIndex(i, j, x, z + step);
-					s32 index12 = getIndex(i, j, x + step, z );
+					s32 index21 = getIndex(i, j, x + step, z);
+					s32 index12 = getIndex(i, j, x, z + step);
 					s32 index22 = getIndex(i, j, x + step, z + step);
 
           // Remapping indices from patch space to global mesh space
-          index11=((index11/TerrainData.CalcPatchSize)+(TerrainData.CalcPatchSize*i))*TerrainData.Size + ((index11%TerrainData.CalcPatchSize)) + (TerrainData.CalcPatchSize*j);
-          index21=((index21/TerrainData.CalcPatchSize)+(TerrainData.CalcPatchSize*i))*TerrainData.Size + ((index21%TerrainData.CalcPatchSize)) + (TerrainData.CalcPatchSize*j);
-          index12=((index12/TerrainData.CalcPatchSize)+(TerrainData.CalcPatchSize*i))*TerrainData.Size + ((index12%TerrainData.CalcPatchSize)) + (TerrainData.CalcPatchSize*j);
-          index22=((index22/TerrainData.CalcPatchSize)+(TerrainData.CalcPatchSize*i))*TerrainData.Size + ((index22%TerrainData.CalcPatchSize)) + (TerrainData.CalcPatchSize*j);
+          index11=((index11/TerrainData.PatchSize)+(TerrainData.CalcPatchSize*i))*TerrainData.Size + 
+            ((index11%TerrainData.PatchSize)) + (TerrainData.CalcPatchSize*j);
+          index21=((index21/TerrainData.PatchSize)+(TerrainData.CalcPatchSize*i))*TerrainData.Size + 
+            ((index21%TerrainData.PatchSize)) + (TerrainData.CalcPatchSize*j);
+          index12=((index12/TerrainData.PatchSize)+(TerrainData.CalcPatchSize*i))*TerrainData.Size + 
+            ((index12%TerrainData.PatchSize)) + (TerrainData.CalcPatchSize*j);
+          index22=((index22/TerrainData.PatchSize)+(TerrainData.CalcPatchSize*i))*TerrainData.Size + 
+            ((index22%TerrainData.PatchSize)) + (TerrainData.CalcPatchSize*j);
 
 					mb.getIndexBuffer().push_back(index12);
 					mb.getIndexBuffer().push_back(index11);
@@ -703,12 +697,12 @@ namespace scene
 					mb.getIndexBuffer().push_back(index21);
 
 					// increment index position horizontally
-					x += step;
+					z += step;
 
-					if (x >= TerrainData.CalcPatchSize) // we've hit an edge
+					if (z >= TerrainData.CalcPatchSize) // we've hit an edge
 					{
-						x = 0;
-						z += step;
+						z = 0;
+						x += step;
 					}
 				}
 				++index;
@@ -765,17 +759,12 @@ namespace scene
 
 		// Loop through patch and generate indices
 		s32 rv=0;
-		while (z<TerrainData.CalcPatchSize)
+		while (x<TerrainData.CalcPatchSize)
 		{
-			//const s32 index11 = getIndex(patchZ, patchX, index, x, z);
-			//const s32 index21 = getIndex(patchZ, patchX, index, x + step, z);
-			//const s32 index12 = getIndex(patchZ, patchX, index, x, z + step);
-			//const s32 index22 = getIndex(patchZ, patchX, index, x + step, z + step);
-
-			const s32 index11 = getIndex(patchX, patchZ, x, z);
-			const s32 index21 = getIndex(patchX, patchZ, x, z + step);
-			const s32 index12 = getIndex(patchX, patchZ, x + step, z);
-			const s32 index22 = getIndex(patchX, patchZ, x + step, z + step);
+      const s32 index11 = getIndex(patchX, patchZ, x, z);
+      const s32 index21 = getIndex(patchX, patchZ, x + step, z);
+      const s32 index12 = getIndex(patchX, patchZ, x, z + step);
+      const s32 index22 = getIndex(patchX, patchZ, x + step, z + step);
 
 			indices[rv++] = index12;
 			indices[rv++] = index11;
@@ -785,12 +774,12 @@ namespace scene
 			indices[rv++] = index21;
 
 			// increment index position horizontally
-			x += step;
+			z += step;
 
-			if (x >= TerrainData.CalcPatchSize) // we've hit an edge
+			if (z >= TerrainData.CalcPatchSize) // we've hit an edge
 			{
-				x = 0;
-				z += step;
+				z = 0;
+				x += step;
 			}
 		}
 
@@ -897,7 +886,7 @@ namespace scene
 
     s32 PatchIndex = PatchX*TerrainData.PatchCount + PatchZ;
 		// left border
-		if (vZ == 0)
+		/*if (vZ == 0)
 		{
 			if (TerrainData.Patches[PatchIndex].Top &&
 				TerrainData.Patches[PatchIndex].CurrentLOD < TerrainData.Patches[PatchIndex].Top->CurrentLOD &&
@@ -946,6 +935,7 @@ namespace scene
 
 		//return (vZ + ((TerrainData.CalcPatchSize) * PatchZ)) * TerrainData.Size +
 			//(vX + ((TerrainData.CalcPatchSize) * PatchX));
+      */
     
 		return vX * TerrainData.PatchSize + vZ;
 	}
@@ -1246,11 +1236,18 @@ namespace scene
 			// Determine new distance threshold for determining what LOD to draw patches at
 			TerrainData.LODDistanceThreshold.reallocate(TerrainData.MaxLOD);
 
+			//const f64 size = TerrainData.PatchSize * TerrainData.PatchSize *
+			//		TerrainData.Scale.X * TerrainData.Scale.Z;
+			//for (s32 i=0; i<TerrainData.MaxLOD; ++i)
+			//{
+			//	TerrainData.LODDistanceThreshold.push_back(size * ((i+1+ i / 2) * (i+1+ i / 2)));
+			//}
+
 			const f64 size = TerrainData.PatchSize * TerrainData.PatchSize *
 					TerrainData.Scale.X * TerrainData.Scale.Z;
 			for (s32 i=0; i<TerrainData.MaxLOD; ++i)
 			{
-				TerrainData.LODDistanceThreshold.push_back(size * ((i+1+ i / 2) * (i+1+ i / 2)));
+				TerrainData.LODDistanceThreshold.push_back(size * (((i+1)/2) * ((i+1)/2)));
 			}
 		}
 	}

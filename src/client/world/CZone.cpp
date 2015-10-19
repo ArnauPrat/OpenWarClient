@@ -43,7 +43,7 @@ namespace owc {
           core::vector3df(0.0f, 0.f, 0.f),     // rotation
           core::vector3df(64.0f, 1.0f, 64.0f),  // scale
           video::SColor ( 255, 255, 255, 255 ),   // vertexColor
-          3,                  
+          7,                  
           scene::ETPS_129,             
           0                   
           );
@@ -64,8 +64,6 @@ namespace owc {
           */
 
       terrain->setMaterialFlag(video::EMF_WIREFRAME, true);
-      const core::vector3df& position =  terrain->getPosition();
-      printf("TERRAIN POSITION: %f, %f, %f\n", position.X, position.Y, position.Z );
       
       fileSystem->drop();
       return 0;
