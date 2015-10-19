@@ -67,7 +67,8 @@ u32 CReadFile::readLine( core::stringc* line ) {
   int c = 0;
   (*line) = "";
   while ( ((c = fgetc(File)) != EOF) && (c != '\n') ) {
-    line->append(c);
+    if(c!= '\r')  // fow windows support
+      line->append(c);
   }
   return line->size();
 }
