@@ -66,7 +66,7 @@ namespace owc {
 
     /** Setting up the camera */
     scene::ICameraSceneNode* camera = smgr_->addCameraSceneNodeFPS();
-    camera->setFarValue(64000.0f);
+    camera->setFarValue(100000.0f);
     //camera->setFOV(1*core::PI/6.0);
 
 
