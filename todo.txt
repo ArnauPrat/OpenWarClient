@@ -1,6 +1,3 @@
 
 TODO:
-- refactor MYPReader* to user irrlicht types
-- adapt myptools
-- adapt mypfiledatabase to irrlicht code conventions
-- implement loadLeightmap2Way
+- Centrar el terreny
