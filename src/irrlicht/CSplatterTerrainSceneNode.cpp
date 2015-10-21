@@ -34,9 +34,12 @@ namespace scene
 			io::IFileSystem* fs, s32 id, s32 maxLOD, E_TERRAIN_PATCH_SIZE patchSize,
 			const core::vector3df& position,
 			const core::vector3df& rotation,
-			const core::vector3df& scale)
+			const core::vector3df& scale,
+      s32 baseFactor,
+      s32 offsetFactor
+      )
 	: ISplatterTerrainSceneNode(parent, mgr, id, position, rotation, scale),
-	TerrainData(patchSize, maxLOD, position, rotation, scale), RenderBuffer(0),
+	TerrainData(patchSize, maxLOD, position, rotation, scale, baseFactor, offsetFactor), RenderBuffer(0),
 	VerticesToRender(0), IndicesToRender(0), DynamicSelectorUpdate(false),
 	OverrideDistanceThreshold(false), UseDefaultRotationPivot(true), ForceRecalculation(true),
 	CameraMovementDelta(10.0f), CameraRotationDelta(1.0f),CameraFOVDelta(0.1f),
@@ -184,14 +187,8 @@ namespace scene
 				vertex.Normal.set(0.0f, 1.0f, 0.0f);
 				vertex.Color = vertexColor;
 				vertex.Pos.X = fx;
-				vertex.Pos.Y = (f32) (baseHeightMap->getPixel(imageSize-x-1,z).getLightness()*248.0f  + 
-                       (f32) offsetHeightMap->getPixel(imageSize-x-1,z).getLightness()*8.0f);
-
-				//vertex.Pos.Y = (f32) (baseHeightMap->getPixel(imageSize-x-1,z).getLightness());
-        /*if(x == 0) {
-          printf("%d %d %d %d\n", baseHeightMap->getPixel(TerrainData.Size-x-1,z).getRed(), baseHeightMap->getPixel(TerrainData.Size-x-1,z).getGreen(),
-              baseHeightMap->getPixel(TerrainData.Size-x-1,z).getBlue(), baseHeightMap->getPixel(TerrainData.Size-x-1,z).getAlpha());
-        }*/
+				vertex.Pos.Y = (f32) (baseHeightMap->getPixel(imageSize-x-1,z).getLightness()*TerrainData.BaseFactor  + 
+                       (f32) offsetHeightMap->getPixel(imageSize-x-1,z).getLightness()*TerrainData.OffsetFactor);
 				vertex.Pos.Z = fz;
 
 				vertex.TCoords.X = (f32)(x % 2);

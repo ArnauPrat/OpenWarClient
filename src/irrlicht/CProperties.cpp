@@ -19,8 +19,6 @@ namespace irr {
       core::stringc line;
       while (file->readLine(&line)) {
         if(line[0] != '[' && line[0] != ';') {
-          os::Printer::log("Read Option: ");
-          os::Printer::log(line.c_str());
           s32 separator = line.findFirst('=');
           core::stringc option = line.subString(0,separator); 
           core::stringc value = line.subString(separator+1, line.size()); 
@@ -28,7 +26,6 @@ namespace irr {
         }
       }
       file->drop();
-
       return 0;
     }
 
@@ -36,6 +33,7 @@ namespace irr {
       std::map<core::stringc, core::stringc>::const_iterator it = properties_.find(propertyName);
       if( it != properties_.end() ) return it->second;
       os::Printer::log("OPTION NOT FOUND", ELL_ERROR);
+      os::Printer::log(propertyName.c_str(), ELL_ERROR);
       return core::stringc();
     }
 

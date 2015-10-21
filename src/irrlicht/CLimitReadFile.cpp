@@ -111,12 +111,12 @@ long CLimitReadFile::getPos() const
 //! return The number of characters read. */
 u32 CLimitReadFile::readLine( core::stringc* line ) {
   char c;
-
   (*line) = "";
 	s32 r = AreaStart + Pos;
 	File->seek(r);
   while ( (File->read(&c,1) > 0) && (AreaStart+Pos < AreaEnd) && (c != '\n') ) {
-    line->append(c);
+    if(c!= '\r') // fow windows support
+      line->append(c);
     Pos += 1;
   }
   return line->size();

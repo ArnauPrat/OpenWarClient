@@ -880,6 +880,8 @@ ISplatterTerrainSceneNode* CSceneManager::addSplatterTerrainSceneNode(
 	const core::vector3df& position,
 	const core::vector3df& rotation,
 	const core::vector3df& scale,
+  s32 baseFactor,
+  s32 offsetFactor,
 	video::SColor vertexColor,
 	s32 maxLOD, E_TERRAIN_PATCH_SIZE patchSize, s32 smoothFactor,
 	bool addAlsoIfHeightmapEmpty)
@@ -909,7 +911,7 @@ ISplatterTerrainSceneNode* CSceneManager::addSplatterTerrainSceneNode(
 	}
 
 	ISplatterTerrainSceneNode* terrain = addSplatterTerrainSceneNode(baseFile, offsetFile, parent, id,
-		position, rotation, scale, vertexColor, maxLOD, patchSize,
+		position, rotation, scale, baseFactor, offsetFactor, vertexColor, maxLOD, patchSize,
 		smoothFactor, addAlsoIfHeightmapEmpty);
 
 	if (baseFile)
@@ -967,6 +969,8 @@ ISplatterTerrainSceneNode* CSceneManager::addSplatterTerrainSceneNode(
 	const core::vector3df& position,
 	const core::vector3df& rotation,
 	const core::vector3df& scale,
+  s32 baseFactor,
+  s32 offsetFactor,
 	video::SColor vertexColor,
 	s32 maxLOD, E_TERRAIN_PATCH_SIZE patchSize,
 	s32 smoothFactor,
@@ -983,7 +987,7 @@ ISplatterTerrainSceneNode* CSceneManager::addSplatterTerrainSceneNode(
 	}
 
 	CSplatterTerrainSceneNode* node = new CSplatterTerrainSceneNode(parent, this, FileSystem, id,
-		maxLOD, patchSize, position, rotation, scale);
+		maxLOD, patchSize, position, rotation, scale, baseFactor, offsetFactor);
 
 	if (!node->loadHeightMap(baseHeightMapFile, offsetHeightMapFile, vertexColor, smoothFactor))
 	{

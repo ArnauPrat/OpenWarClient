@@ -264,6 +264,8 @@ namespace scene
 			const core::vector3df& position = core::vector3df(0.0f,0.0f,0.0f),
 			const core::vector3df& rotation = core::vector3df(0.0f,0.0f,0.0f),
 			const core::vector3df& scale = core::vector3df(1.0f,1.0f,1.0f),
+      s32 baseFactor = 10,
+      s32 offsetFactor = 1,
 			video::SColor vertexColor = video::SColor(255,255,255,255),
 			s32 maxLOD=4, E_TERRAIN_PATCH_SIZE patchSize=ETPS_17,s32 smoothFactor=0,
 			bool addAlsoIfHeightmapEmpty = false);
@@ -288,6 +290,8 @@ namespace scene
 			const core::vector3df& position = core::vector3df(0.0f,0.0f,0.0f),
 			const core::vector3df& rotation = core::vector3df(0.0f,0.0f,0.0f),
 			const core::vector3df& scale = core::vector3df(1.0f,1.0f,1.0f),
+      s32 baseFactor = 10,
+      s32 offsetFactor = 1,
 			video::SColor vertexColor = video::SColor(255,255,255,255),
 			s32 maxLOD=5, E_TERRAIN_PATCH_SIZE patchSize=ETPS_17, s32 smoothFactor=0,
 			bool addAlsoIfHeightmapEmpty = false);

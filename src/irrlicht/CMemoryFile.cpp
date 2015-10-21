@@ -4,6 +4,7 @@
 
 #include "CMemoryFile.h"
 #include "irrString.h"
+#include "os.h"
 
 namespace irr
 {
@@ -104,13 +105,13 @@ long CMemoryFile::getPos() const
 
 //! return The number of characters read. */
 u32 CMemoryFile::readLine( core::stringc* line ) {
-  int c;
-
   (*line)="";
   while ( (Pos < Len) && (((c8*)Buffer)[Pos] != '\n') ) {
-    line->append(((c8*)Buffer)[Pos]);
+    if(((c8*)Buffer)[Pos]!= '\r') // fow windows support
+      line->append(((c8*)Buffer)[Pos]);
     Pos++;
   }
+  Pos++;
   return line->size();
 }
 

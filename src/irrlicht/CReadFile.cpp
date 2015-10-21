@@ -61,13 +61,12 @@ long CReadFile::getSize() const
 
 //! return The number of characters read. */
 u32 CReadFile::readLine( core::stringc* line ) {
-
 	if (!isOpen())
 		return 0;
   int c = 0;
   (*line) = "";
   while ( ((c = fgetc(File)) != EOF) && (c != '\n') ) {
-    if(c!= '\r')  // fow windows support
+    if(c!= '\r') // fow windows support
       line->append(c);
   }
   return line->size();

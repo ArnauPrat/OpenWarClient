@@ -30,9 +30,13 @@ namespace owc {
       offsetFileName.append("/offset.pcx");
       terrainFileName.append("/terrain.pcx");
 
-      /*io::IReadFile* sectorFile = fileSystem->createAndOpenFile(sectorFileName);
+      io::IReadFile* sectorFile = fileSystem->createAndOpenFile(sectorFileName);
       Properties.load(sectorFile);
-      sectorFile->drop();*/
+      SSectorData sectorData( Properties.getInt("sizex"),
+                              Properties.getInt("sizey"),
+                              Properties.getInt("offsetfactor"), 
+                              Properties.getInt("scalefactor"));
+      sectorFile->drop();
 
       scene::ISplatterTerrainSceneNode* terrain = SceneManager->addSplatterTerrainSceneNode(
           offsetFileName,
@@ -42,6 +46,8 @@ namespace owc {
           core::vector3df(0.0f, 0.f, 0.f),     // position
           core::vector3df(0.0f, 0.f, 0.f),     // rotation
           core::vector3df(64.0f, 1.0f, 64.0f),  // scale
+          sectorData.BaseFactor,
+          sectorData.OffsetFactor,
           video::SColor ( 255, 255, 255, 255 ),   // vertexColor
           3,                  
           scene::ETPS_129,             

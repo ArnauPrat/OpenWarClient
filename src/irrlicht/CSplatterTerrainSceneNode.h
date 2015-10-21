@@ -47,7 +47,9 @@ namespace scene
 			s32 maxLOD = 4, E_TERRAIN_PATCH_SIZE patchSize = ETPS_129,
 			const core::vector3df& position = core::vector3df(0.0f, 0.0f, 0.0f),
 			const core::vector3df& rotation = core::vector3df(0.0f, 0.0f, 0.0f),
-			const core::vector3df& scale = core::vector3df(1.0f, 1.0f, 1.0f));
+			const core::vector3df& scale = core::vector3df(1.0f, 1.0f, 1.0f),
+      s32 baseFactor = 10,
+      s32 offsetFactor = 1);
 
 		virtual ~CSplatterTerrainSceneNode();
 
@@ -236,9 +238,9 @@ namespace scene
 
 		struct STerrainData
 		{
-			STerrainData(s32 patchSize, s32 maxLOD, const core::vector3df& position, const core::vector3df& rotation, const core::vector3df& scale)
+			STerrainData(s32 patchSize, s32 maxLOD, const core::vector3df& position, const core::vector3df& rotation, const core::vector3df& scale, s32 baseFactor, s32 offsetFactor)
 			: Patches(0), Size(0), Position(position), Rotation(rotation),
-				Scale(scale), PatchSize(patchSize), CalcPatchSize(patchSize-1),
+				Scale(scale), BaseFactor(baseFactor), OffsetFactor(offsetFactor), PatchSize(patchSize), CalcPatchSize(patchSize-1),
 				PatchCount(0), MaxLOD(maxLOD)
 			{
 			}
@@ -249,6 +251,8 @@ namespace scene
 			core::vector3df	Rotation;
 			core::vector3df RotationPivot;
 			core::vector3df	Scale;
+      s32 BaseFactor; 
+      s32 OffsetFactor;
 			core::vector3df Center;
 			s32		PatchSize;
 			s32		CalcPatchSize;

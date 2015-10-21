@@ -11,6 +11,21 @@ using namespace irr;
 
 namespace owc {
   namespace world {
+
+    struct SSectorData {
+
+      SSectorData( s32 sizex, s32 sizey, s32 baseFactor, s32 offsetFactor ) 
+        : SizeX(sizex), 
+          SizeY(sizey), 
+          BaseFactor(baseFactor), 
+          OffsetFactor(offsetFactor) {}
+
+      s32 SizeX;
+      s32 SizeY;
+      s32 BaseFactor;
+      s32 OffsetFactor;
+    };
+
     class CZone
     {
       public:
