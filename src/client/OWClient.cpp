@@ -36,7 +36,7 @@ namespace owc {
     /*device_ = createDevice( video::EDT_SOFTWARE, core::dimension2d<u32>(640, 480), 16,
           false, false, false, 0);*/
 
-    device_ = createDevice( video::EDT_OPENGL, core::dimension2d<u32>(1280, 720), 16,
+    device_ = createDevice( video::EDT_OPENGL, core::dimension2d<u32>(1440, 900), 16,
           false, false, false, 0);
     if (!device_)
       return 1;
@@ -67,14 +67,12 @@ namespace owc {
     /** Setting up the camera */
     scene::ICameraSceneNode* camera = smgr_->addCameraSceneNodeFPS();
     camera->setFarValue(100000.0f);
-    //camera->setFOV(1*core::PI/6.0);
+    camera->setFOV(core::PI/5.0);
 
 
     core::list<scene::ISceneNodeAnimator*>::ConstIterator camera_animators = camera->getAnimators().begin();
     scene::ISceneNodeAnimatorCameraFPS* camera_animator = (scene::ISceneNodeAnimatorCameraFPS*) *camera_animators;
     camera_animator->setMoveSpeed( 5.0f );
-
-
 
 
     /** Adding resource files and directories **/

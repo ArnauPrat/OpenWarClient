@@ -69,6 +69,7 @@ namespace owc {
           );
           */
 
+      terrain->setPosition(-terrain->getTerrainCenter());
       terrain->setMaterialFlag(video::EMF_WIREFRAME, true);
       
       fileSystem->drop();
