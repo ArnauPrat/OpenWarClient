@@ -67,12 +67,12 @@ namespace owc {
     /** Setting up the camera */
     scene::ICameraSceneNode* camera = smgr_->addCameraSceneNodeFPS();
     camera->setFarValue(100000.0f);
-    camera->setFOV(core::PI/5.0);
+    camera->setFOV(core::PI/4.0);
 
 
     core::list<scene::ISceneNodeAnimator*>::ConstIterator camera_animators = camera->getAnimators().begin();
     scene::ISceneNodeAnimatorCameraFPS* camera_animator = (scene::ISceneNodeAnimatorCameraFPS*) *camera_animators;
-    camera_animator->setMoveSpeed( 5.0f );
+    camera_animator->setMoveSpeed( 2.0f );
 
 
     /** Adding resource files and directories **/

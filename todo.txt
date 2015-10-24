@@ -1,3 +1,14 @@
 
 TODO:
-- Centrar el terreny
+- implement a better LOD based on a quad-tree
+- allow changing several initial configuration parameters from the config
+  script:
+    - resolution
+    - camera FOV
+    - camera speed 
+    - render mode (wireframe, solid, etc.)
+- allow changing several parameters at run-time
+    - camera FOV
+    - camera speed 
+    - render mode (wireframe, solid, etc.)
+- Test terrain rendering quality against original client 
