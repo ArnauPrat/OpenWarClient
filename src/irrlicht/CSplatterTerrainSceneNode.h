@@ -220,10 +220,21 @@ namespace scene
 	private:
 		friend class CSplatterTerrainTriangleSelector;
 
+    struct SSubPatch {
+      SSubPatch() 
+        : XOffset(0), ZOffset(0) 
+      {
+      }
+
+      s32 XOffset;
+      s32 ZOffset;
+			core::aabbox3df BoundingBox;
+    };
+
 		struct SPatch
 		{
 			SPatch()
-			: Top(0), Bottom(0), Right(0), Left(0), CurrentLOD(-1)
+			: Top(0), Bottom(0), Right(0), Left(0), CurrentLOD(-1), SubPatchCount(0), SubPatches(NULL)
 			{
 			}
 
@@ -234,6 +245,8 @@ namespace scene
 			s32 CurrentLOD;
 			core::aabbox3df BoundingBox;
 			core::vector3df Center;
+      s32 SubPatchCount;
+      SSubPatch* SubPatches;
 		};
 
 		struct STerrainData

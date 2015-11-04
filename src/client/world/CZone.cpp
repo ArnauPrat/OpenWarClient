@@ -45,7 +45,7 @@ namespace owc {
           -1,                 
           core::vector3df(0.0f, 0.f, 0.f),     // position
           core::vector3df(0.0f, 0.f, 0.f),     // rotation
-          core::vector3df(64.0f, 1.0f, 64.0f),  // scale
+          core::vector3df(64.0f, 1.25f, 64.0f),  // scale
           sectorData.BaseFactor,
           sectorData.OffsetFactor,
           video::SColor ( 255, 255, 255, 255 ),   // vertexColor

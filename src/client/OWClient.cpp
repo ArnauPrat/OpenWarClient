@@ -38,6 +38,7 @@ namespace owc {
 
     device_ = createDevice( video::EDT_OPENGL, core::dimension2d<u32>(1600, 900), 16,
           false, false, false, 0);
+    
     if (!device_)
       return 1;
 

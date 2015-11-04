@@ -71,6 +71,12 @@ namespace scene
       }
       delete [] RenderBuffer;
     }
+
+    for (int i = 0; i < TerrainData.PatchCount; ++i) {
+      for (int j = 0; j < TerrainData.PatchCount; ++j) {
+        delete [] TerrainData.Patches[i*TerrainData.PatchCount + j].SubPatches;
+      }
+    }
 		delete [] TerrainData.Patches;
 
 		if (FileSystem)
@@ -1140,6 +1146,17 @@ namespace scene
           }
         }
 
+        // Computing subpatches offsets
+        patch.SubPatchCount = TerrainData.CalcPatchSize / 8;
+        patch.SubPatches = new SSubPatch[patch.SubPatchCount*patch.SubPatchCount];
+        for( s32 xx = 0; xx < patch.SubPatchCount; ++xx ) {
+          for( s32 zz = 0; zz < patch.SubPatchCount; ++zz ) {
+            s32 subPatchIndex = xx*patch.SubPatchCount + zz;
+            patch.SubPatches[subPatchIndex].XOffset = xx * 8;
+            patch.SubPatches[subPatchIndex].ZOffset = zz * 8;
+          }
+        }
+
         // Pre-allocate memory for indices
         RenderBuffer[index]->getIndexBuffer().set_used(
             TerrainData.CalcPatchSize * TerrainData.CalcPatchSize * 6);
@@ -1168,16 +1185,20 @@ namespace scene
 				SPatch& patch = TerrainData.Patches[index];
 				patch.CurrentLOD = 0;
 
-				/*const s32 xstart = x*TerrainData.CalcPatchSize;
-				const s32 xend = xstart+TerrainData.PatchSize;
-				const s32 zstart = z*TerrainData.CalcPatchSize;
-				const s32 zend = zstart+TerrainData.PatchSize;*/
-				// For each patch, calculate the bounding box (mins and maxes)
 				patch.BoundingBox.reset(RenderBuffer[index]->getPosition(0));
 
-				for (s32 xx = 0; xx < TerrainData.PatchSize; ++xx)
-					for (s32 zz = 0; zz < TerrainData.PatchSize; ++zz)
-						patch.BoundingBox.addInternalPoint(RenderBuffer[index]->getVertexBuffer()[xx * TerrainData.PatchSize + zz].Pos);
+        for (s32 xx = 0; xx < patch.SubPatchCount; ++xx) {
+          for (s32 zz = 0; zz < patch.SubPatchCount; ++zz) {
+            SSubPatch& subPatch = patch.SubPatches[xx*patch.SubPatchCount+zz];
+            subPatch.BoundingBox.reset(RenderBuffer[index]->getPosition(subPatch.XOffset*TerrainData.CalcPatchSize + subPatch.ZOffset));
+            for (s32 xxx = 0; xxx < 8; ++xxx) {
+              for (s32 zzz = 0; zzz < 8; ++zzz) {
+                subPatch.BoundingBox.addInternalPoint(RenderBuffer[index]->getPosition((subPatch.XOffset+xxx)*TerrainData.CalcPatchSize + (subPatch.ZOffset+zzz)));
+              }
+            }
+						patch.BoundingBox.addInternalBox(subPatch.BoundingBox);
+          }
+        }
 
 				// Reconfigure the bounding box of the terrain as a whole
 				TerrainData.BoundingBox.addInternalBox(patch.BoundingBox);
