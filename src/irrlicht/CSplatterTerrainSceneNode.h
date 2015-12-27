@@ -228,6 +228,7 @@ namespace scene
 
       s32 XOffset;
       s32 ZOffset;
+      s32 CurrentLOD;
 			core::aabbox3df BoundingBox;
     };
 

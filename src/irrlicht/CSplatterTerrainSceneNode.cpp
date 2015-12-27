@@ -488,7 +488,30 @@ namespace scene
 				TerrainData.Patches[j].CurrentLOD = -1;
 			}
 		}
-	}
+    for (int x = 0; x < TerrainData.PatchCount; ++x) {
+      for (int z = 0; z < TerrainData.PatchCount; ++z) {
+        s32 patchIndex = x*TerrainData.PatchCount+z;
+        const SPatch* patch = &TerrainData.Patches[patchIndex];
+        for( int xx = 0; xx <  patch->SubPatchCount; ++xx ) {
+          for( int zz = 0; zz <  patch->SubPatchCount; ++zz ) {
+            SSubPatch* subPatch = &patch->SubPatches[xx*patch->SubPatchCount+zz];
+            if (frustum->getBoundingBox().intersectsWithBox(subPatch->BoundingBox)) {
+              const f32 distance = cameraPosition.getDistanceFromSQ(subPatch->BoundingBox.getCenter());
+              subPatch->CurrentLOD = 0;
+              for (s32 i = TerrainData.MaxLOD - 1; i>0; --i)
+              {
+                if (distance >= TerrainData.LODDistanceThreshold[i])
+                {
+                  subPatch->CurrentLOD = i;
+                  break;
+                }
+              }
+            }
+          }
+        }
+      }
+    }
+  }
 
 
 	void CSplatterTerrainSceneNode::preRenderIndicesCalculations()
